@@ -1,6 +1,5 @@
 server:
   port: 8086
-
 spring:
   application:
     name: pyokemon-bff
@@ -15,21 +14,21 @@ spring:
     redis:
       time-to-live: 60s
       cache-null-values: false
-
-# 외부 서비스 URL
 external:
   services:
     booking-service: http://localhost:8088
     event-service: http://localhost:8081
     account-service: http://localhost:8080
     payment-service: http://localhost:8082
-
-# 좌석 홀드 TTL 설정 (초)
+webclient:
+  connect-timeout: 5000
+  response-timeout: 5000
+  read-timeout: 5000
+  write-timeout: 5000
+  max-in-memory-size: 2097152
 seat:
   hold:
     ttl: 300
-
-# Actuator 설정
 management:
   endpoints:
     web:
