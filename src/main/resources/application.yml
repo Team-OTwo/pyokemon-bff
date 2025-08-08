@@ -1,0 +1,40 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: pyokemon-bff
+  webflux:
+    base-path: /api
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cache:
+    type: redis
+    redis:
+      time-to-live: 60s
+      cache-null-values: false
+
+# 외부 서비스 URL
+external:
+  services:
+    booking-service: http://localhost:8088
+    event-service: http://localhost:8081
+    account-service: http://localhost:8080
+    payment-service: http://localhost:8082
+
+# 좌석 홀드 TTL 설정 (초)
+seat:
+  hold:
+    ttl: 300
+
+# Actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
