@@ -41,6 +41,7 @@ pyokemon-bff/
 │   │   │               ├── config/              # 설정 클래스
 │   │   │               │   ├── CacheConfig.java
 │   │   │               │   └── WebClientConfig.java
+│   │   │               │   └── RedisConfig.java
 │   │   │               ├── controller/          # API 컨트롤러
 │   │   │               │   ├── BookingController.java
 │   │   │               │   ├── BookingDetailController.java
