@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PriceDto {
+public class SeatPriceDto {
     private Long id;
-    private Long eventScheduleId;
-    private Long seatClassId;
     private Integer price;
 }
