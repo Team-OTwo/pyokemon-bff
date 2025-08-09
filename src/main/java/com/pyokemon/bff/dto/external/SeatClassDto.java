@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class SeatClassDto {
     private Long id;
     private String className;
-    private Integer priority;  // 낮을수록 높은 등급
+    private Integer priority;
     private Long venueId;
 }

@@ -15,7 +15,6 @@ public class BookingDto {
     private Long eventScheduleId;
     private Long seatId;
     private Long paymentId;
-    private String status;  // BOOKED, PAID, CANCELLED
-    private LocalDateTime createdAt;
+    private String status;  // PENDDING, BOOKED, CANCELLED
     private LocalDateTime updatedAt;
 }

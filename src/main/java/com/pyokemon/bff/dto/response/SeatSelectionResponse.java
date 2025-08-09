@@ -53,6 +53,6 @@ public class SeatSelectionResponse {
     @AllArgsConstructor
     public static class ChangedSeatInfo {
         private String seatId;
-        private String status;  // AVAILABLE, BOOKED, HELD
+        private Boolean status;  // AVAILABLE, BOOKED, PENDDING
     }
 }

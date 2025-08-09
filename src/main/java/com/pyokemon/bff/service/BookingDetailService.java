@@ -98,14 +98,12 @@ public class BookingDetailService {
                                             BookingDetailResponse.PaymentInfo paymentInfo = BookingDetailResponse.PaymentInfo.builder()
                                                     .method(payment.getMethod())
                                                     .status(payment.getStatus())
-                                                    .paidAt(payment.getPaidAt())
                                                     .amount(payment.getAmount())
                                                     .build();
                                             
                                             return BookingDetailResponse.builder()
                                                     .bookingId(booking.getId())
                                                     .status(booking.getStatus())
-                                                    .createdAt(booking.getCreatedAt())
                                                     .user(userInfo)
                                                     .event(eventInfo)
                                                     .seat(seatInfo)

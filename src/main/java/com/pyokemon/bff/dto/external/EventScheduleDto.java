@@ -14,5 +14,4 @@ public class EventScheduleDto {
     private Long eventId;
     private Long venueId;
     private LocalDateTime eventDate;
-    private String status;  // SCHEDULED, CANCELLED, COMPLETED
 }
