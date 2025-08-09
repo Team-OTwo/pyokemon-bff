@@ -1,5 +1,7 @@
 package com.pyokemon.bff.dto.response;
 
+import com.pyokemon.bff.dto.BookingStatus;
+import com.pyokemon.bff.dto.PaymentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +20,7 @@ public class BookingResponse {
     private SeatInfo seat;
     private String thumbnailUrl;
     private Integer totalPrice;
-    private String status;
+    private PaymentStatus status;
     
     @Data
     @Builder
