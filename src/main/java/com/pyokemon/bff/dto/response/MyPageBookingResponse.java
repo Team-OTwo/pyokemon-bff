@@ -1,5 +1,6 @@
 package com.pyokemon.bff.dto.response;
 
+import com.pyokemon.bff.dto.BookingStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,5 +17,5 @@ public class MyPageBookingResponse {
     private String venueName;
     private String thumbnailUrl;
     private Integer totalPrice;
-    private String status;
+    private BookingStatus status;
 }
