@@ -2,7 +2,7 @@ package com.pyokemon.bff.service;
 
 import com.pyokemon.bff.dto.external.BookingDto;
 import com.pyokemon.bff.dto.external.EventScheduleDto;
-import com.pyokemon.bff.dto.external.PriceDto;
+import com.pyokemon.bff.dto.external.SeatPriceDto;
 import com.pyokemon.bff.dto.external.SeatClassDto;
 import com.pyokemon.bff.dto.external.SeatDto;
 import com.pyokemon.bff.dto.external.VenueDto;
@@ -76,13 +76,13 @@ public class SeatSelectionService {
                     .retrieve()
                     .bodyToFlux(SeatClassDto.class);
             
-            Flux<PriceDto> pricesFlux = eventServiceWebClient.get()
+            Flux<SeatPriceDto> pricesFlux = eventServiceWebClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/api/v1/prices")
                             .queryParam("event_schedule_id", eventScheduleId)
                             .build())
                     .retrieve()
-                    .bodyToFlux(PriceDto.class);
+                    .bodyToFlux(SeatPriceDto.class);
             
             return Mono.zip(
                     venueMono,
@@ -94,7 +94,7 @@ public class SeatSelectionService {
                 VenueDto venue = tuple.getT1();
                 List<SeatDto> allSeats = tuple.getT2();
                 List<SeatClassDto> seatClasses = tuple.getT3();
-                List<PriceDto> prices = tuple.getT4();
+                List<SeatPriceDto> prices = tuple.getT4();
                 List<BookingDto> bookedSeats = tuple.getT5();
                 
                 // 예매된 좌석 ID 목록
@@ -115,7 +115,7 @@ public class SeatSelectionService {
                 
                 // 좌석 클래스별 가격 매핑
                 Map<Long, Integer> seatClassPriceMap = prices.stream()
-                        .collect(Collectors.toMap(PriceDto::getSeatClassId, PriceDto::getPrice));
+                        .collect(Collectors.toMap(SeatPriceDto::getSeatClassId, SeatPriceDto::getPrice));
                 
                 // 좌석 클래스별 정보 초기화
                 seatClasses.forEach(seatClass -> {
