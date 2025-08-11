@@ -19,11 +19,9 @@ jobs:
           cache: 'gradle'
 
       - name: gradlew 실행 권한 부여
-        run: chmod +x ./gradlew
-        working-directory: ./pyokemon-bff
+        run: chmod +x gradlew
 
       - name: Gradle로 빌드
-        working-directory: ./pyokemon-bff
         run: ./gradlew build -x test
 
       - name: Docker Buildx 설정
@@ -39,8 +37,8 @@ jobs:
       - name: Docker 이미지 빌드 및 푸시
         uses: docker/build-push-action@v4
         with:
-          context: ./pyokemon-bff
-          file: ./pyokemon-bff/Dockerfile
+          context: .
+          file: ./Dockerfile
           push: true
           tags: ghcr.io/team-otwo/pyokemon-bff/bff-service:latest
 
