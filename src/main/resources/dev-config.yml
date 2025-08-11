@@ -1,0 +1,50 @@
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+logging:
+  config: classpath:log4j2.yml
+  level:
+    com.pyokemon: DEBUG
+    root: DEBUG
+    org.springframework: INFO
+
+spring:
+  application:
+    name: pyokemon-bff
+  webflux:
+    base-path: /api
+  data:
+    redis:
+      host: pyokemon-redis
+      port: 6379
+  cache:
+    type: rediㅉs
+    redis:
+      time-to-live: 60s
+      cache-null-values: false
+
+external:
+  services:
+    booking-service: http://booking-service:8088
+    event-service: http://event-service:8081
+    account-service: http://account-service:8080
+    payment-service: http://payment-service:8082
+
+webclient:
+  connect-timeout: 5000
+  response-timeout: 5000
+  read-timeout: 5000
+  write-timeout: 5000
+  max-in-memory-size: 2097152
+
+seat:
+  hold:
+    ttl: 300 

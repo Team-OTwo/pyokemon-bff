@@ -1,5 +1,6 @@
 server:
   port: 8086
+
 spring:
   application:
     name: pyokemon-bff
@@ -14,26 +15,40 @@ spring:
     redis:
       time-to-live: 60s
       cache-null-values: false
+  config:
+    activate:
+      on-profile: default
+    import:
+      - optional:file:./config/application.yml
+
+logging:
+  config: classpath:log4j2.yml
+  level:
+    com.pyokemon: DEBUG
+    org.springframework: INFO
+
 external:
   services:
     booking-service: http://localhost:8088
     event-service: http://localhost:8081
     account-service: http://localhost:8080
     payment-service: http://localhost:8082
+
 webclient:
   connect-timeout: 5000
   response-timeout: 5000
   read-timeout: 5000
   write-timeout: 5000
   max-in-memory-size: 2097152
+
 seat:
   hold:
     ttl: 300
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+    import:
+      - classpath:dev-config.yml
