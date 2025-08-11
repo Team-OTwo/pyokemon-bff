@@ -3,13 +3,6 @@ name: Synology NAS에 Docker 이미지 배포 (GHCR 사용)
 on:
   push:
     branches: [ develop ]
-    paths:
-      - 'pyokemon-bff/**'
-      - '.github/workflows/bff-service-cicd.yml'
-  pull_request:
-    branches: [ develop ]
-    paths:
-      - 'pyokemon-bff/**'
 
 jobs:
   build-and-deploy:
@@ -26,7 +19,8 @@ jobs:
           cache: 'gradle'
 
       - name: gradlew 실행 권한 부여
-        run: chmod +x ./pyokemon-bff/gradlew
+        run: chmod +x ./gradlew
+        working-directory: ./pyokemon-bff
 
       - name: Gradle로 빌드
         working-directory: ./pyokemon-bff
