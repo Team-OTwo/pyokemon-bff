@@ -22,7 +22,7 @@ public class MyPageBookingService {
     private final WebClient bookingServiceWebClient;
     private final WebClient eventServiceWebClient;
     private final WebClient paymentServiceWebClient;
-    
+
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd(E) HH:mm");
 
     /**
@@ -40,25 +40,25 @@ public class MyPageBookingService {
                         .build())
                 .retrieve()
                 .bodyToFlux(BookingDto.class);
-        
+
         // 2단계: 공연/결제 병렬 조회 및 3단계: 공연/공연장 병렬 조회
         return bookingsFlux.flatMap(booking -> {
             Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
             Mono<EventScheduleDto> eventScheduleMono = getEventSchedule(booking.getEventScheduleId());
-            
+
             return Mono.zip(paymentMono, eventScheduleMono)
                     .flatMap(tuple -> {
                         PaymentDto payment = tuple.getT1();
                         EventScheduleDto eventSchedule = tuple.getT2();
-                        
+
                         Mono<EventDto> eventMono = getEvent(eventSchedule.getEventId());
                         Mono<VenueDto> venueMono = getVenue(eventSchedule.getVenueId());
-                        
+
                         return Mono.zip(eventMono, venueMono)
                                 .map(innerTuple -> {
                                     EventDto event = innerTuple.getT1();
                                     VenueDto venue = innerTuple.getT2();
-                                    
+
                                     return MyPageBookingResponse.builder()
                                             .bookingId(booking.getId())
                                             .eventTitle(event.getTitle())
@@ -100,14 +100,14 @@ public class MyPageBookingService {
                 .retrieve()
                 .bodyToMono(VenueDto.class);
     }
-    
+
     /**
      * 이벤트 날짜 포맷팅
      */
     private String formatEventDate(String eventDate) {
         return eventDate;
     }
-    
+
     /**
      * 상태값 번역
      * @param status 원본 상태값 (BOOKED, PAID, CANCELLED)
@@ -117,7 +117,7 @@ public class MyPageBookingService {
         if (status == null) {
             return "";
         }
-        
+
         return switch (status.toUpperCase()) {
             case "BOOKED" -> "예매 완료";
             case "PAID" -> "결제 완료";
