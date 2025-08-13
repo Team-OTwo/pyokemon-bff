@@ -4,7 +4,7 @@ spring:
   application:
     name: pyokemon-bff
   webflux:
-    base-path: /api
+    base-path: /bff
   data:
     redis:
       host: localhost
