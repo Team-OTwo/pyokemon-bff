@@ -1,5 +1,6 @@
 package com.pyokemon.bff.service;
 
+import com.pyokemon.bff.dto.PaymentStatus;
 import com.pyokemon.bff.dto.external.BookingDto;
 import com.pyokemon.bff.dto.external.EventDto;
 import com.pyokemon.bff.dto.external.EventScheduleDto;
@@ -13,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -27,6 +29,7 @@ public class MyPageBookingService {
 
     /**
      * 사용자 마이페이지 예매 내역 조회
+     *
      * @param accountId 사용자 ID
      * @return 예매 목록
      */
@@ -35,15 +38,22 @@ public class MyPageBookingService {
         // 1단계: account_id 기준 tb_booking 조회
         Flux<BookingDto> bookingsFlux = bookingServiceWebClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/api/v1/bookings")
-                        .queryParam("account_id", accountId)
+//                        .path("/api/v1/bookings")
+                        .path("/booking/api/bookings/bff")
                         .build())
+                .header("X-Auth-AccountId", String.valueOf(accountId)) // 헤더 전달
                 .retrieve()
                 .bodyToFlux(BookingDto.class);
 
         // 2단계: 공연/결제 병렬 조회 및 3단계: 공연/공연장 병렬 조회
         return bookingsFlux.flatMap(booking -> {
-            Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
+//            Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
+            Mono<PaymentDto> paymentMono = Mono.just(new PaymentDto(booking.getPaymentId(),
+                    0,
+                    "CARD",
+                    PaymentStatus.DONE,
+                    LocalDateTime.now()));
+
             Mono<EventScheduleDto> eventScheduleMono = getEventSchedule(booking.getEventScheduleId());
 
             return Mono.zip(paymentMono, eventScheduleMono)
@@ -66,7 +76,7 @@ public class MyPageBookingService {
                                             .venueName(venue.getName())
                                             .thumbnailUrl(event.getThumbnailUrl())
                                             .totalPrice(payment.getAmount())
-                                            .status(translateStatus(booking.getStatus()))
+                                            .status(booking.getStatus())
                                             .build();
                                 });
                     });
@@ -82,21 +92,21 @@ public class MyPageBookingService {
 
     private Mono<EventScheduleDto> getEventSchedule(Long eventScheduleId) {
         return eventServiceWebClient.get()
-                .uri("/api/v1/event-schedules/{id}", eventScheduleId)
+                .uri("/event/api/events/bff/event-schedules/{id}", eventScheduleId)
                 .retrieve()
                 .bodyToMono(EventScheduleDto.class);
     }
 
     private Mono<EventDto> getEvent(Long eventId) {
         return eventServiceWebClient.get()
-                .uri("/api/v1/events/{id}", eventId)
+                .uri("/event/api/events/bff/{id}", eventId)
                 .retrieve()
                 .bodyToMono(EventDto.class);
     }
 
     private Mono<VenueDto> getVenue(Long venueId) {
         return eventServiceWebClient.get()
-                .uri("/api/v1/venues/{id}", venueId)
+                .uri("/event/api/venues/bff/{id}", venueId)
                 .retrieve()
                 .bodyToMono(VenueDto.class);
     }
@@ -110,6 +120,7 @@ public class MyPageBookingService {
 
     /**
      * 상태값 번역
+     *
      * @param status 원본 상태값 (BOOKED, PAID, CANCELLED)
      * @return 번역된 상태값 (예매 완료, 결제 완료, 취소됨)
      */
