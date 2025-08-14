@@ -82,7 +82,7 @@ public class BookingDetailService {
                                         .map(t2 -> {
                                             BookingDetailResponse response = new BookingDetailResponse();
                                             response.setBookingId(booking.getId());
-                                            response.setStatus(booking.getStatus().getDisplayValue());
+                                            response.setStatus(booking.getStatus());
                                             response.setCreatedAt(booking.getUpdatedAt());
 
                                             BookingDetailResponse.UserInfo user = new BookingDetailResponse.UserInfo();
@@ -110,7 +110,7 @@ public class BookingDetailService {
                                             paymentInfo.setStatus(payment.getStatus());
                                             paymentInfo.setPaidAt(payment.getUpdatedAt().toString());
                                             paymentInfo.setAmount(payment.getAmount());
-//                                            response.setPayment(paymentInfo);
+                                            response.setPayment(paymentInfo);
 
                                             return response;
                                         });
