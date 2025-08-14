@@ -35,7 +35,7 @@ public class BookingService {
     public Flux<BookingResponse> getBookings(Long accountId, Long eventScheduleId) {
         // 1단계: event_schedule_id 기준 동시 조회
         Mono<EventScheduleDto> eventScheduleMono = getEventSchedule(eventScheduleId);
-        
+
         Flux<BookingDto> bookingsFlux = bookingServiceWebClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/v1/bookings")
@@ -43,17 +43,17 @@ public class BookingService {
                         .build())
                 .retrieve()
                 .bodyToFlux(BookingDto.class);
-        
+
         // 2단계: booking row 하나당 병렬 조회 및 3단계: 좌석 등급명 조회
         return bookingsFlux.flatMap(booking -> {
             Mono<AccountDto> accountMono = getAccount(booking.getAccountId());
             Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
             Mono<SeatDto> seatMono = getSeat(booking.getSeatId());
-            
+
             return eventScheduleMono.flatMap(eventSchedule -> {
                 Mono<EventDto> eventMono = getEvent(eventSchedule.getEventId());
                 Mono<VenueDto> venueMono = getVenue(eventSchedule.getVenueId());
-                
+
                 return Mono.zip(accountMono, paymentMono, seatMono, eventMono, venueMono)
                         .flatMap(tuple -> {
                             AccountDto account = tuple.getT1();
@@ -61,7 +61,7 @@ public class BookingService {
                             SeatDto seat = tuple.getT3();
                             EventDto event = tuple.getT4();
                             VenueDto venue = tuple.getT5();
-                            
+
                             return getSeatClass(seat.getSeatClassId()).map(seatClass -> {
                                 BookingResponse.SeatInfo seatInfo = BookingResponse.SeatInfo.builder()
                                         .className(seatClass.getClassName())
@@ -69,7 +69,7 @@ public class BookingService {
                                         .row(seat.getRow())
                                         .col(seat.getCol())
                                         .build();
-                                
+
                                 return BookingResponse.builder()
                                         .bookingId(booking.getId())
                                         .userName(account.getName())
@@ -135,7 +135,7 @@ public class BookingService {
                 .retrieve()
                 .bodyToMono(SeatClassDto.class);
     }
-    
+
     /**
      * 상태값 번역
      * @param status 원본 상태값 (BOOKED, PAID, CANCELLED)
@@ -145,7 +145,7 @@ public class BookingService {
         if (status == null) {
             return "";
         }
-        
+
         return switch (status.toUpperCase()) {
             case "BOOKED" -> "예매 완료";
             case "PAID" -> "결제 완료";
