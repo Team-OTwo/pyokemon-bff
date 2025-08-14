@@ -38,21 +38,16 @@ public class MyPageBookingService {
         // 1단계: account_id 기준 tb_booking 조회
         Flux<BookingDto> bookingsFlux = bookingServiceWebClient.get()
                 .uri(uriBuilder -> uriBuilder
-//                        .path("/api/v1/bookings")
                         .path("/booking/api/bookings/bff")
                         .build())
                 .header("X-Auth-AccountId", String.valueOf(accountId)) // 헤더 전달
                 .retrieve()
                 .bodyToFlux(BookingDto.class);
 
+
         // 2단계: 공연/결제 병렬 조회 및 3단계: 공연/공연장 병렬 조회
         return bookingsFlux.flatMap(booking -> {
-//            Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
-            Mono<PaymentDto> paymentMono = Mono.just(new PaymentDto(booking.getPaymentId(),
-                    0,
-                    "CARD",
-                    PaymentStatus.DONE,
-                    LocalDateTime.now()));
+            Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
 
             Mono<EventScheduleDto> eventScheduleMono = getEventSchedule(booking.getEventScheduleId());
 
@@ -76,7 +71,7 @@ public class MyPageBookingService {
                                             .venueName(venue.getName())
                                             .thumbnailUrl(event.getThumbnailUrl())
                                             .totalPrice(payment.getAmount())
-                                            .status(booking.getStatus())
+                                            .status(booking.getStatus().getDisplayValue())
                                             .build();
                                 });
                     });
@@ -85,7 +80,7 @@ public class MyPageBookingService {
 
     private Mono<PaymentDto> getPayment(Long paymentId) {
         return paymentServiceWebClient.get()
-                .uri("/api/v1/payments/{id}", paymentId)
+                .uri("/payment/api/payments/bff/{id}", paymentId)
                 .retrieve()
                 .bodyToMono(PaymentDto.class);
     }
