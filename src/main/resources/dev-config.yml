@@ -21,15 +21,6 @@ spring:
     name: pyokemon-bff
   webflux:
     base-path: /api
-  data:
-    redis:
-      host: pyokemon-redis
-      port: 6379
-  cache:
-    type: redis
-    redis:
-      time-to-live: 60s
-      cache-null-values: false
 
 external:
   services:

@@ -20,7 +20,7 @@ public class BookingResponse {
     private SeatInfo seat;
     private String thumbnailUrl;
     private Integer totalPrice;
-    private PaymentStatus status;
+    private String status;
     
     @Data
     @Builder

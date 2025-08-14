@@ -6,20 +6,24 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public enum BookingStatus {
-    PENDDING("PENDDING"),
-    BOOKED("BOOKED"),
-    CANCELED("CANCELED");
+    PENDDING("PENDDING", "예약 대기"),
+    BOOKED("BOOKED", "예약 완료"),
+    CANCELED("CANCELED", "예약 취소");
 
     private final String value;
+    private final String displayValue;
 
-    BookingStatus(String value) {
+    BookingStatus(String value, String displayValue) {
         this.value = value;
+        this.displayValue = displayValue;
     }
 
     @JsonValue
     public String getValue() {
         return value;
     }
+
+    public String getDisplayValue() { return displayValue; }
 
     @JsonCreator
     public static BookingStatus fromValue(String value) {
@@ -32,7 +36,7 @@ public enum BookingStatus {
                 return status;
             }
         }
-        log.warn("Unknown payment status: {}, defaulting to PENDDING", value);
+        log.warn("Unknown Booking status: {}, defaulting to PENDDING", value);
         return PENDDING;
     }
 }

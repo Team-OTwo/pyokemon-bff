@@ -28,18 +28,18 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         String message = "서버 내부 오류가 발생했습니다.";
         
-//        // 예외 유형에 따라 상태 코드와 메시지 설정
-//        if (ex instanceof ResponseStatusException) {
-//            status = ((ResponseStatusException) ex).getStatusCode();
-//            message = ex.getMessage();
-//        } else if (ex.getMessage() != null && ex.getMessage().contains("권한이 없습니다")) {
-//            status = HttpStatus.FORBIDDEN;
-//            message = "해당 리소스에 접근할 권한이 없습니다.";
-//        } else if (ex.getCause() != null && ex.getCause().getClass().getSimpleName().contains("TimeoutException")) {
-//            status = HttpStatus.GATEWAY_TIMEOUT;
-//            message = "외부 서비스 응답 시간이 초과되었습니다.";
-//        }
-//
+        // 예외 유형에 따라 상태 코드와 메시지 설정
+        if (ex instanceof ResponseStatusException rse) {
+            status = HttpStatus.valueOf(rse.getStatusCode().value());
+            message = rse.getReason() != null ? rse.getReason() : message;
+        } else if (ex.getMessage() != null && ex.getMessage().contains("권한이 없습니다")) {
+            status = HttpStatus.FORBIDDEN;
+            message = "해당 리소스에 접근할 권한이 없습니다.";
+        } else if (ex.getCause() != null && ex.getCause().getClass().getSimpleName().contains("TimeoutException")) {
+            status = HttpStatus.GATEWAY_TIMEOUT;
+            message = "외부 서비스 응답 시간이 초과되었습니다.";
+        }
+
         // 응답 설정
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
