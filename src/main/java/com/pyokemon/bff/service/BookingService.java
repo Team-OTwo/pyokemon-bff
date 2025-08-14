@@ -79,7 +79,7 @@ public class BookingService {
                                         .seat(seatInfo)
                                         .thumbnailUrl(event.getThumbnailUrl())
                                         .totalPrice(payment.getAmount())
-//                                        .status(translateStatus(booking.getStatus()))
+                                        .status(payment.getStatus().getDisplayValue())
                                         .build();
                             });
                         });

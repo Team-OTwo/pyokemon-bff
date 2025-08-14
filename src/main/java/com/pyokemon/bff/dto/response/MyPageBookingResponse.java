@@ -17,5 +17,5 @@ public class MyPageBookingResponse {
     private String venueName;
     private String thumbnailUrl;
     private Integer totalPrice;
-    private BookingStatus status;
+    private String status;
 }

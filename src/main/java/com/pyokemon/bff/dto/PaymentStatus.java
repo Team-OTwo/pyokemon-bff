@@ -6,21 +6,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public enum PaymentStatus {
-    READY("READY"),
-    DONE("DONE"),
-    CANCELED("CANCELED"),
-    FAILED("FAILED");
+    READY("READY", "결제 대기"),
+    DONE("DONE", "결제 완료"),
+    CANCELED("CANCELED", "결제 취소"),
+    FAILED("FAILED", "결제 실패");
 
     private final String value;
+    private final String displayValue;
 
-    PaymentStatus(String value) {
+    PaymentStatus(String value, String displayValue) {
         this.value = value;
+        this.displayValue = displayValue;
     }
 
     @JsonValue
     public String getValue() {
         return value;
     }
+
+    public String getDisplayValue() { return displayValue; }
 
     @JsonCreator
     public static PaymentStatus fromValue(String value) {

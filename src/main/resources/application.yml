@@ -6,15 +6,6 @@ spring:
     name: pyokemon-bff
   webflux:
     base-path: /bff
-  data:
-    redis:
-      host: localhost
-      port: 6379
-  cache:
-    type: redis
-    redis:
-      time-to-live: 60s
-      cache-null-values: false
   config:
     activate:
       on-profile: default

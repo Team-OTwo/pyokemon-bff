@@ -9,12 +9,12 @@ import java.time.LocalDateTime;
 @Data
 public class BookingDetailResponse {
     private Long bookingId;
-    private BookingStatus status;
+    private String status;
     private LocalDateTime createdAt;
     private UserInfo user;
     private EventInfo event;
     private SeatInfo seat;
-    private PaymentInfo payment;
+    private String payment;
 
     @Data
     public static class UserInfo {
