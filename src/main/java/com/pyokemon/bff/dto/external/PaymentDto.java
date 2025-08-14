@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class PaymentDto {
     private Long id;
-    private Integer amount;
+    private Long amount;
     private String method;
     private PaymentStatus status;
     private LocalDateTime updatedAt;
