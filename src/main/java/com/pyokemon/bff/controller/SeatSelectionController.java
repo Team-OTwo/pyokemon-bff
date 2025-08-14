@@ -17,31 +17,31 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class SeatSelectionController {
 
-    private final SeatSelectionService seatSelectionService;
-
-    /**
-     * 실시간 좌석 선택 정보 조회 (초기 로드)
-     * @param eventScheduleId 공연 일정 ID
-     * @param accountId 사용자 ID
-     * @return 좌석 선택 정보
-     */
-    @GetMapping("/{eventScheduleId}/seats")
-    public Mono<SeatSelectionResponse> getSeats(
-            @PathVariable Long eventScheduleId,
-            @RequestParam Long accountId) {
-        return seatSelectionService.getSeats(eventScheduleId, accountId);
-    }
-
-    /**
-     * 실시간 좌석 선택 정보 폴링 (증분 업데이트)
-     * @param eventScheduleId 공연 일정 ID
-     * @param lastUpdatedAt 마지막 업데이트 시간
-     * @return 변경된 좌석 정보
-     */
-    @GetMapping("/{eventScheduleId}/seats/changes")
-    public Mono<SeatSelectionResponse> getSeatChanges(
-            @PathVariable Long eventScheduleId,
-            @RequestParam LocalDateTime lastUpdatedAt) {
-        return seatSelectionService.getSeatChanges(eventScheduleId, lastUpdatedAt);
-    }
+//    private final SeatSelectionService seatSelectionService;
+//
+//    /**
+//     * 실시간 좌석 선택 정보 조회 (초기 로드)
+//     * @param eventScheduleId 공연 일정 ID
+//     * @param accountId 사용자 ID
+//     * @return 좌석 선택 정보
+//     */
+//    @GetMapping("/{eventScheduleId}/seats")
+//    public Mono<SeatSelectionResponse> getSeats(
+//            @PathVariable Long eventScheduleId,
+//            @RequestParam Long accountId) {
+//        return seatSelectionService.getSeats(eventScheduleId, accountId);
+//    }
+//
+//    /**
+//     * 실시간 좌석 선택 정보 폴링 (증분 업데이트)
+//     * @param eventScheduleId 공연 일정 ID
+//     * @param lastUpdatedAt 마지막 업데이트 시간
+//     * @return 변경된 좌석 정보
+//     */
+//    @GetMapping("/{eventScheduleId}/seats/changes")
+//    public Mono<SeatSelectionResponse> getSeatChanges(
+//            @PathVariable Long eventScheduleId,
+//            @RequestParam LocalDateTime lastUpdatedAt) {
+//        return seatSelectionService.getSeatChanges(eventScheduleId, lastUpdatedAt);
+//    }
 }
