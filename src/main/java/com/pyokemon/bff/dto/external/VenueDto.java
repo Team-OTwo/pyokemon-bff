@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VenueDto {
-    private Long id;
+    private Long venueId;
     private String name;
 }
