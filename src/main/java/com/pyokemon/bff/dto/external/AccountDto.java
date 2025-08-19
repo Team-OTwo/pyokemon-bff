@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountDto {
-    private Long id;
+    private Long accountId;
     private String name;
 }

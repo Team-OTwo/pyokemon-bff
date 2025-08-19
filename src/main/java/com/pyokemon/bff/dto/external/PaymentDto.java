@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentDto {
-    private Long id;
+    private Long paymentId;
     private Long amount;
     private String method;
     private PaymentStatus status;

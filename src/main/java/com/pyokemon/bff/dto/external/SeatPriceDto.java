@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SeatPriceDto {
-    private Long id;
+    private Long seatPriceId;
     private Integer price;
 }

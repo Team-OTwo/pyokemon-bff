@@ -37,10 +37,7 @@ public class MyPageBookingService {
     public Flux<MyPageBookingResponse> getMyBookings(Long accountId) {
         // 1단계: account_id 기준 tb_booking 조회
         Flux<BookingDto> bookingsFlux = bookingServiceWebClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/booking/api/bookings/bff")
-                        .build())
-                .header("X-Auth-AccountId", String.valueOf(accountId)) // 헤더 전달
+                .uri("/booking/api/bookings/accounts/{accountId}/bookings", accountId)
                 .retrieve()
                 .bodyToFlux(BookingDto.class);
 
@@ -65,7 +62,7 @@ public class MyPageBookingService {
                                     VenueDto venue = innerTuple.getT2();
 
                                     return MyPageBookingResponse.builder()
-                                            .bookingId(booking.getId())
+                                            .bookingId(booking.getBookingId())
                                             .eventTitle(event.getTitle())
                                             .eventDate(formatEventDate(eventSchedule.getEventDate().format(DATE_FORMATTER)))
                                             .venueName(venue.getName())
@@ -80,28 +77,28 @@ public class MyPageBookingService {
 
     private Mono<PaymentDto> getPayment(Long paymentId) {
         return paymentServiceWebClient.get()
-                .uri("/payment/api/payments/bff/{id}", paymentId)
+                .uri("/payment/api/payments/{id}", paymentId)
                 .retrieve()
                 .bodyToMono(PaymentDto.class);
     }
 
     private Mono<EventScheduleDto> getEventSchedule(Long eventScheduleId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/events/bff/event-schedules/{id}", eventScheduleId)
+                .uri("/event/api/event-schedules/{id}", eventScheduleId)
                 .retrieve()
                 .bodyToMono(EventScheduleDto.class);
     }
 
     private Mono<EventDto> getEvent(Long eventId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/events/bff/{id}", eventId)
+                .uri("/event/api/bff/events/{id}", eventId)
                 .retrieve()
                 .bodyToMono(EventDto.class);
     }
 
     private Mono<VenueDto> getVenue(Long venueId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/venues/bff/{id}", venueId)
+                .uri("/event/api/venues/{id}", venueId)
                 .retrieve()
                 .bodyToMono(VenueDto.class);
     }

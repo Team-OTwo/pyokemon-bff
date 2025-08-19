@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventDto {
-    private Long id;
+    private Long eventId;
     private String title;
     private String thumbnailUrl;
 }
