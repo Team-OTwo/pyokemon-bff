@@ -2,11 +2,13 @@ package com.pyokemon.bff.service;
 
 import com.pyokemon.bff.dto.response.BookingDetailResponse;
 import com.pyokemon.bff.dto.external.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Service
+@RequiredArgsConstructor
 public class BookingDetailService {
     private final WebClient bookingClient;
     private final WebClient eventClient;
@@ -24,14 +26,14 @@ public class BookingDetailService {
     public Mono<BookingDetailResponse> getBookingDetail(Long bookingId, Long accountId) {
         // 1단계: booking-service와 account-service 호출
         Mono<BookingDto> bookingMono = bookingClient.get()
-                .uri("/booking/api/bookings/{id}", bookingId)
+                .uri("/booking/api/bookings/bff/{id}", bookingId)
                 .retrieve()
                 .bodyToMono(BookingDto.class)
                 .filter(booking -> booking.getAccountId().equals(accountId))
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("Booking not found or unauthorized")));
 
         Mono<AccountDto> accountMono = accountClient.get()
-                .uri("/account/api/accounts/{id}", accountId)
+                .uri("/account/api/users/{id}", accountId)
                 .retrieve()
                 .bodyToMono(AccountDto.class);
 
@@ -42,12 +44,12 @@ public class BookingDetailService {
 
                     // 2단계: event-service (schedule, seat), payment-service 호출
                     Mono<EventScheduleDto> scheduleMono = eventClient.get()
-                            .uri("event/api/schedules/{id}", booking.getEventScheduleId())
+                            .uri("event/api/event-schedules/{id}", booking.getEventScheduleId())
                             .retrieve()
                             .bodyToMono(EventScheduleDto.class);
 
                     Mono<PaymentDto> paymentMono = paymentClient.get()
-                            .uri("event/api/payments/{id}", booking.getPaymentId())
+                            .uri("payment/api/payments/{id}", booking.getPaymentId())
                             .retrieve()
                             .bodyToMono(PaymentDto.class);
 
@@ -64,7 +66,7 @@ public class BookingDetailService {
 
                                 // 3단계: event-service (event, venue, seat class) 호출
                                 Mono<EventDto> eventMono = eventClient.get()
-                                        .uri("event/api/events/{id}", schedule.getEventId())
+                                        .uri("event/api/bff/events/{id}", schedule.getEventId())
                                         .retrieve()
                                         .bodyToMono(EventDto.class);
 
