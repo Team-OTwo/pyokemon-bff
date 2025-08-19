@@ -1,7 +1,5 @@
 package com.pyokemon.bff.dto.response;
 
-import com.pyokemon.bff.dto.BookingStatus;
-import com.pyokemon.bff.dto.PaymentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,20 +10,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookingResponse {
-    private Long bookingId;
-    private String userName;
+    private Long eventId;
     private String eventTitle;
-    private String eventDate;
+    private String eventDate;   // yyyy-MM-dd 등 표시용
     private String venueName;
-    private SeatInfo seat;
     private String thumbnailUrl;
-    private Integer totalPrice;
-    private String status;
-    
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
+    private java.util.List<BookingItem> items;
+
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class BookingItem {
+        private Long bookingId;
+        private String userName;
+        private SeatInfo seat;
+        private Long totalPrice;
+        private String status; // "결제완료" 등 표시용
+    }
+
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
     public static class SeatInfo {
         private String className;
         private Integer floor;
@@ -33,3 +34,6 @@ public class BookingResponse {
         private String col;
     }
 }
+
+
+
