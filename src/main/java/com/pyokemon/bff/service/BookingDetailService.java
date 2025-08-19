@@ -10,29 +10,21 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class BookingDetailService {
-    private final WebClient bookingClient;
-    private final WebClient eventClient;
-    private final WebClient accountClient;
-    private final WebClient paymentClient;
-
-    public BookingDetailService(WebClient bookingServiceWebClient, WebClient eventServiceWebClient,
-                                WebClient accountServiceWebClient, WebClient paymentServiceWebClient) {
-        this.bookingClient = bookingServiceWebClient;
-        this.eventClient = eventServiceWebClient;
-        this.accountClient = accountServiceWebClient;
-        this.paymentClient = paymentServiceWebClient;
-    }
+    private final WebClient bookingServiceWebClient;
+    private final WebClient eventServiceWebClient;
+    private final WebClient accountServiceWebClient;
+    private final WebClient paymentServiceWebClient;
 
     public Mono<BookingDetailResponse> getBookingDetail(Long bookingId, Long accountId) {
         // 1단계: booking-service와 account-service 호출
-        Mono<BookingDto> bookingMono = bookingClient.get()
-                .uri("/booking/api/bookings/bff/{id}", bookingId)
+        Mono<BookingDto> bookingMono = bookingServiceWebClient.get()
+                .uri("/booking/api/bookings/bff/{bookingId}", bookingId)
                 .retrieve()
                 .bodyToMono(BookingDto.class)
                 .filter(booking -> booking.getAccountId().equals(accountId))
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("Booking not found or unauthorized")));
 
-        Mono<AccountDto> accountMono = accountClient.get()
+        Mono<AccountDto> accountMono = accountServiceWebClient.get()
                 .uri("/account/api/users/{accountId}", accountId)
                 .retrieve()
                 .bodyToMono(AccountDto.class);
@@ -43,17 +35,17 @@ public class BookingDetailService {
                     AccountDto account = tuple.getT2();
 
                     // 2단계: event-service (schedule, seat), payment-service 호출
-                    Mono<EventScheduleDto> scheduleMono = eventClient.get()
+                    Mono<EventScheduleDto> scheduleMono = eventServiceWebClient.get()
                             .uri("/event/api/event-schedules/{eventScheduleId}", booking.getEventScheduleId())
                             .retrieve()
                             .bodyToMono(EventScheduleDto.class);
 
-                    Mono<PaymentDto> paymentMono = paymentClient.get()
+                    Mono<PaymentDto> paymentMono = paymentServiceWebClient.get()
                             .uri("/payment/api/payments/{paymentId}", booking.getPaymentId())
                             .retrieve()
                             .bodyToMono(PaymentDto.class);
 
-                    Mono<SeatDto> seatMono = eventClient.get()
+                    Mono<SeatDto> seatMono = eventServiceWebClient.get()
                             .uri("/event/api/seats/{seatId}", booking.getSeatId())
                             .retrieve()
                             .bodyToMono(SeatDto.class);
@@ -65,17 +57,17 @@ public class BookingDetailService {
                                 SeatDto seat = t.getT3();
 
                                 // 3단계: event-service (event, venue, seat class) 호출
-                                Mono<EventDto> eventMono = eventClient.get()
+                                Mono<EventDto> eventMono = eventServiceWebClient.get()
                                         .uri("/event/api/bff/events/{eventId}", schedule.getEventId())
                                         .retrieve()
                                         .bodyToMono(EventDto.class);
 
-                                Mono<VenueDto> venueMono = eventClient.get()
+                                Mono<VenueDto> venueMono = eventServiceWebClient.get()
                                         .uri("/event/api/venues/{venueId}", schedule.getVenueId())
                                         .retrieve()
                                         .bodyToMono(VenueDto.class);
 
-                                Mono<SeatClassDto> seatClassMono = eventClient.get()
+                                Mono<SeatClassDto> seatClassMono = eventServiceWebClient.get()
                                         .uri("/event/api/seat-classes/{seatClassId}", seat.getSeatClassId())
                                         .retrieve()
                                         .bodyToMono(SeatClassDto.class);
