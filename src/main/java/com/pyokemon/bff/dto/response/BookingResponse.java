@@ -19,7 +19,7 @@ public class BookingResponse {
     private String venueName;
     private SeatInfo seat;
     private String thumbnailUrl;
-    private Integer totalPrice;
+    private Long totalPrice;
     private String status;
     
     @Data
