@@ -2,11 +2,13 @@ package com.pyokemon.bff.service;
 
 import com.pyokemon.bff.dto.response.BookingDetailResponse;
 import com.pyokemon.bff.dto.external.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Service
+@RequiredArgsConstructor
 public class BookingDetailService {
     private final WebClient bookingClient;
     private final WebClient eventClient;
@@ -24,7 +26,7 @@ public class BookingDetailService {
     public Mono<BookingDetailResponse> getBookingDetail(Long bookingId, Long accountId) {
         // 1단계: booking-service와 account-service 호출
         Mono<BookingDto> bookingMono = bookingClient.get()
-                .uri("/booking/api/bff/bookings/{bookingId}", bookingId)
+                .uri("/booking/api/bookings/bff/{id}", bookingId)
                 .retrieve()
                 .bodyToMono(BookingDto.class)
                 .filter(booking -> booking.getAccountId().equals(accountId))
