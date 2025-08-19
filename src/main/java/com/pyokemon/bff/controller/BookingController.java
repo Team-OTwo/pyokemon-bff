@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/v1/bookings")
@@ -18,14 +19,12 @@ public class BookingController {
 
     /**
      * 테넌트 예매 현황 조회
-     * @param accountId 테넌트 ID
      * @param eventScheduleId 공연 일정 ID
      * @return 예매 목록
      */
     @GetMapping
-    public Flux<BookingResponse> getBookings(
-            @RequestParam Long accountId,
+    public Mono<BookingResponse> getBookings(
             @RequestParam Long eventScheduleId) {
-        return bookingService.getBookings(accountId, eventScheduleId);
+        return bookingService.getBookings(eventScheduleId);
     }
 }
