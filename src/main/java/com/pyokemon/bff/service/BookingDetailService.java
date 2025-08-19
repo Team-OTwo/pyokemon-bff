@@ -76,7 +76,7 @@ public class BookingDetailService {
                                         .map(t2 -> {
                                             BookingDetailResponse response = new BookingDetailResponse();
                                             response.setBookingId(booking.getId());
-                                            response.setStatus(booking.getStatus());
+                                            response.setStatus(booking.getStatus().getDisplayValue());
                                             response.setCreatedAt(booking.getUpdatedAt());
 
                                             BookingDetailResponse.UserInfo user = new BookingDetailResponse.UserInfo();
@@ -101,9 +101,9 @@ public class BookingDetailService {
 
                                             BookingDetailResponse.PaymentInfo paymentInfo = new BookingDetailResponse.PaymentInfo();
                                             paymentInfo.setMethod(payment.getMethod());
-                                            paymentInfo.setStatus(payment.getStatus());
+                                            paymentInfo.setStatus(payment.getStatus().getDisplayValue());
                                             paymentInfo.setPaidAt(payment.getUpdatedAt().toString());
-                                            paymentInfo.setAmount(payment.getAmount() == null ? null : payment.getAmount().longValue());
+                                            paymentInfo.setAmount(payment.getAmount());
                                             response.setPayment(paymentInfo);
 
                                             return response;

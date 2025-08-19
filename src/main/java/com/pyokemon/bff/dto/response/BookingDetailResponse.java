@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 public class BookingDetailResponse {
     private Long bookingId;
-    private BookingStatus status;
+    private String status;
     private LocalDateTime createdAt;
     private UserInfo user;
     private EventInfo event;
@@ -45,7 +45,7 @@ public class BookingDetailResponse {
     @Data
     public static class PaymentInfo {
         private String method;
-        private PaymentStatus status;
+        private String status;
         private String paidAt;
         private Long amount;
     }
