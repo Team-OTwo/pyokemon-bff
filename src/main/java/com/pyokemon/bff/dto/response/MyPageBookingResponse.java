@@ -16,6 +16,6 @@ public class MyPageBookingResponse {
     private String eventDate;
     private String venueName;
     private String thumbnailUrl;
-    private Integer totalPrice;
+    private Long totalPrice;
     private String status;
 }

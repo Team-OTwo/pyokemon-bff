@@ -47,6 +47,6 @@ public class BookingDetailResponse {
         private String method;
         private PaymentStatus status;
         private String paidAt;
-        private Integer amount;
+        private Long amount;
     }
 }
