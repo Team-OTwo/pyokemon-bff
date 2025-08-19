@@ -67,7 +67,7 @@ public class BookingService {
                                 .build();
 
                         return BookingItem.builder()
-                                .bookingId(b.getId())
+                                .bookingId(b.getBookingId())
                                 .userName(account.getName())
                                 .seat(seatInfo)
                                 .totalPrice(payment.getAmount())
@@ -83,7 +83,7 @@ public class BookingService {
                     java.util.List<BookingItem> items = t.getT2();
 
                     return BookingResponse.builder()
-                            .eventId(ctx.event().getId())
+                            .eventId(ctx.event().getEventId())
                             .eventTitle(ctx.event().getTitle())
                             .eventDate(ctx.schedule().getEventDate().toLocalDate().toString())
                             .venueName(ctx.venue().getName())

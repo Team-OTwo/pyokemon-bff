@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventScheduleDto {
-    private Long id;
+    private Long eventScheduleId;
     private Long eventId;
     private Long venueId;
     private LocalDateTime eventDate;

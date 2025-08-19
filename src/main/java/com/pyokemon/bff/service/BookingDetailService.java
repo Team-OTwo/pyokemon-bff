@@ -75,7 +75,7 @@ public class BookingDetailService {
                                 return Mono.zip(eventMono, venueMono, seatClassMono)
                                         .map(t2 -> {
                                             BookingDetailResponse response = new BookingDetailResponse();
-                                            response.setBookingId(booking.getId());
+                                            response.setBookingId(booking.getBookingId());
                                             response.setStatus(booking.getStatus().getDisplayValue());
                                             response.setCreatedAt(booking.getUpdatedAt());
 
