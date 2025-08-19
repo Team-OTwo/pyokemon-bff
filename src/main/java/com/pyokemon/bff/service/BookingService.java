@@ -9,6 +9,7 @@ import com.pyokemon.bff.dto.external.SeatClassDto;
 import com.pyokemon.bff.dto.external.SeatDto;
 import com.pyokemon.bff.dto.external.VenueDto;
 import com.pyokemon.bff.dto.response.BookingResponse;
+import com.pyokemon.bff.dto.response.BookingResponse.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -25,132 +26,122 @@ public class BookingService {
     private final WebClient accountServiceWebClient;
     private final WebClient paymentServiceWebClient;
 
-    /**
-     * 테넌트 예매 현황 조회
-     * @param accountId 테넌트 ID
-     * @param eventScheduleId 공연 일정 ID
-     * @return 예매 목록
-     */
-    @Cacheable(value = "bookings", key = "#eventScheduleId + '_' + #accountId")
-    public Flux<BookingResponse> getBookings(Long accountId, Long eventScheduleId) {
-        // 1단계: event_schedule_id 기준 동시 조회
-        Mono<EventScheduleDto> eventScheduleMono = getEventSchedule(eventScheduleId);
+    /** 공연 일정별 예매 목록(공연 정보는 바깥, items에는 예매 항목만) */
+    @Cacheable(value = "bookings", key = "#eventScheduleId")
+    public Mono<BookingResponse> getBookings(Long eventScheduleId) {
 
+        // 1) 공통 컨텍스트(한 번만 호출)
+        Mono<Ctx> ctxMono = getEventSchedule(eventScheduleId)
+                .flatMap(es -> Mono.zip(
+                        getEvent(es.getEventId()),
+                        getVenue(es.getVenueId())
+                ).map(t -> new Ctx(es, t.getT1(), t.getT2())))
+                .cache();
+
+        // 2) 예매 목록 Flux
         Flux<BookingDto> bookingsFlux = bookingServiceWebClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/api/v1/bookings")
-                        .queryParam("event_schedule_id", eventScheduleId)
-                        .build())
+                .uri("/booking/api/bookings/event-schedules/{eventScheduleId}/bookings", eventScheduleId)
                 .retrieve()
                 .bodyToFlux(BookingDto.class);
 
-        // 2단계: booking row 하나당 병렬 조회 및 3단계: 좌석 등급명 조회
-        return bookingsFlux.flatMap(booking -> {
-            Mono<AccountDto> accountMono = getAccount(booking.getAccountId());
-            Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
-            Mono<SeatDto> seatMono = getSeat(booking.getSeatId());
+        // 3) 각 예매 항목 -> BookingItem 변환
+        Mono<java.util.List<BookingItem>> itemsMono = bookingsFlux.flatMap(b -> {
 
-            return eventScheduleMono.flatMap(eventSchedule -> {
-                Mono<EventDto> eventMono = getEvent(eventSchedule.getEventId());
-                Mono<VenueDto> venueMono = getVenue(eventSchedule.getVenueId());
+            Mono<AccountDto> accountMono = getAccount(b.getAccountId());
+            Mono<PaymentDto> paymentMono = getPayment(b.getPaymentId());
+            Mono<SeatDto> seatMono       = getSeat(b.getSeatId());
+            Mono<SeatClassDto> seatClassMono = seatMono.flatMap(s -> getSeatClass(s.getSeatClassId()));
 
-                return Mono.zip(accountMono, paymentMono, seatMono, eventMono, venueMono)
-                        .flatMap(tuple -> {
-                            AccountDto account = tuple.getT1();
-                            PaymentDto payment = tuple.getT2();
-                            SeatDto seat = tuple.getT3();
-                            EventDto event = tuple.getT4();
-                            VenueDto venue = tuple.getT5();
+            return Mono.zip(accountMono, paymentMono, seatMono, seatClassMono)
+                    .map(t -> {
+                        AccountDto account   = t.getT1();
+                        PaymentDto payment   = t.getT2();
+                        SeatDto seat         = t.getT3();
+                        SeatClassDto seatCls = t.getT4();
 
-                            return getSeatClass(seat.getSeatClassId()).map(seatClass -> {
-                                BookingResponse.SeatInfo seatInfo = BookingResponse.SeatInfo.builder()
-                                        .className(seatClass.getClassName())
-                                        .floor(seat.getFloor())
-                                        .row(seat.getRow())
-                                        .col(seat.getCol())
-                                        .build();
+                        SeatInfo seatInfo = SeatInfo.builder()
+                                .className(seatCls.getClassName())
+                                .floor(seat.getFloor())
+                                .row(seat.getRow())
+                                .col(seat.getCol())
+                                .build();
 
-                                return BookingResponse.builder()
-                                        .bookingId(booking.getId())
-                                        .userName(account.getName())
-                                        .eventTitle(event.getTitle())
-                                        .eventDate(eventSchedule.getEventDate().toLocalDate().toString())
-                                        .venueName(venue.getName())
-                                        .seat(seatInfo)
-                                        .thumbnailUrl(event.getThumbnailUrl())
-                                        .totalPrice(payment.getAmount())
-                                        .status(payment.getStatus().getDisplayValue())
-                                        .build();
-                            });
-                        });
-            });
-        });
+                        return BookingItem.builder()
+                                .bookingId(b.getId())
+                                .userName(account.getName())
+                                .seat(seatInfo)
+                                .totalPrice(payment.getAmount())
+                                .status(payment.getStatus().getDisplayValue()) // enum 라벨
+                                .build();
+                    });
+        }, /*concurrency*/ 32).collectList();
+
+        // 4) 최종 래핑
+        return Mono.zip(ctxMono, itemsMono)
+                .map(t -> {
+                    Ctx ctx = t.getT1();
+                    java.util.List<BookingItem> items = t.getT2();
+
+                    return BookingResponse.builder()
+                            .eventId(ctx.event().getId())
+                            .eventTitle(ctx.event().getTitle())
+                            .eventDate(ctx.schedule().getEventDate().toLocalDate().toString())
+                            .venueName(ctx.venue().getName())
+                            .thumbnailUrl(ctx.event().getThumbnailUrl())
+                            .items(items)
+                            .build();
+                });
     }
+
+    // ---- 내부 호출들 ----
+    private record Ctx(EventScheduleDto schedule, EventDto event, VenueDto venue) {}
 
     private Mono<EventScheduleDto> getEventSchedule(Long eventScheduleId) {
         return eventServiceWebClient.get()
-                .uri("/api/v1/event-schedules/{id}", eventScheduleId)
+                .uri("/event/api/event-schedules/{eventScheduleId}", eventScheduleId)
                 .retrieve()
                 .bodyToMono(EventScheduleDto.class);
     }
 
     private Mono<AccountDto> getAccount(Long accountId) {
         return accountServiceWebClient.get()
-                .uri("/api/v1/accounts/{id}", accountId)
+                .uri("/account/api/users/{accountId}", accountId)
                 .retrieve()
                 .bodyToMono(AccountDto.class);
     }
 
     private Mono<PaymentDto> getPayment(Long paymentId) {
         return paymentServiceWebClient.get()
-                .uri("/api/v1/payments/{id}", paymentId)
+                .uri("/payment/api/payments/{paymentId}", paymentId)
                 .retrieve()
                 .bodyToMono(PaymentDto.class);
     }
 
     private Mono<SeatDto> getSeat(Long seatId) {
         return eventServiceWebClient.get()
-                .uri("/api/v1/seats/{id}", seatId)
+                .uri("/event/api/seats/{seatId}", seatId) // ← 앞 공백 제거!
                 .retrieve()
                 .bodyToMono(SeatDto.class);
     }
 
     private Mono<EventDto> getEvent(Long eventId) {
         return eventServiceWebClient.get()
-                .uri("/api/v1/events/{id}", eventId)
+                .uri("/event/api/bff/events/{eventId}", eventId)
                 .retrieve()
                 .bodyToMono(EventDto.class);
     }
 
     private Mono<VenueDto> getVenue(Long venueId) {
         return eventServiceWebClient.get()
-                .uri("/api/v1/venues/{id}", venueId)
+                .uri("/event/api/venues/{venueId}", venueId)
                 .retrieve()
                 .bodyToMono(VenueDto.class);
     }
 
     private Mono<SeatClassDto> getSeatClass(Long seatClassId) {
         return eventServiceWebClient.get()
-                .uri("/api/v1/seat-classes/{id}", seatClassId)
+                .uri("/event/api/seat-classes/{seatClassId}", seatClassId)
                 .retrieve()
                 .bodyToMono(SeatClassDto.class);
-    }
-
-    /**
-     * 상태값 번역
-     * @param status 원본 상태값 (BOOKED, PAID, CANCELLED)
-     * @return 번역된 상태값 (예매 완료, 결제 완료, 취소됨)
-     */
-    private String translateStatus(String status) {
-        if (status == null) {
-            return "";
-        }
-
-        return switch (status.toUpperCase()) {
-            case "BOOKED" -> "예매 완료";
-            case "PAID" -> "결제 완료";
-            case "CANCELLED" -> "취소됨";
-            default -> status;
-        };
     }
 }
