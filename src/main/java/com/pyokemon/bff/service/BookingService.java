@@ -86,7 +86,7 @@ public class BookingService {
                             .eventId(ctx.event().getEventId())
                             .eventTitle(ctx.event().getTitle())
                             .eventDate(ctx.schedule().getEventDate().toLocalDate().toString())
-                            .venueName(ctx.venue().getName())
+                            .venueName(ctx.venue().getVenueName())
                             .thumbnailUrl(ctx.event().getThumbnailUrl())
                             .items(items)
                             .build();

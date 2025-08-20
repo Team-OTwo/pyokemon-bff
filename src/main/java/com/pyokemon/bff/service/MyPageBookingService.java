@@ -65,7 +65,7 @@ public class MyPageBookingService {
                                             .bookingId(booking.getBookingId())
                                             .eventTitle(event.getTitle())
                                             .eventDate(formatEventDate(eventSchedule.getEventDate().format(DATE_FORMATTER)))
-                                            .venueName(venue.getName())
+                                            .venueName(venue.getVenueName())
                                             .thumbnailUrl(event.getThumbnailUrl())
                                             .totalPrice(payment.getAmount())
                                             .status(booking.getStatus().getDisplayValue())

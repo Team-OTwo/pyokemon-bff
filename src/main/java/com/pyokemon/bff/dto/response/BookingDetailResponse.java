@@ -1,12 +1,12 @@
 package com.pyokemon.bff.dto.response;
 
-import com.pyokemon.bff.dto.BookingStatus;
-import com.pyokemon.bff.dto.PaymentStatus;
-import lombok.Data;
 
+import lombok.Data;
+import lombok.Builder;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 public class BookingDetailResponse {
     private Long bookingId;
     private String status;
@@ -17,11 +17,13 @@ public class BookingDetailResponse {
     private PaymentInfo payment;
 
     @Data
+    @Builder
     public static class UserInfo {
         private String name;
     }
 
     @Data
+    @Builder
     public static class EventInfo {
         private String title;
         private String thumbnailUrl;
@@ -29,12 +31,14 @@ public class BookingDetailResponse {
         private VenueInfo venue;
 
         @Data
+        @Builder
         public static class VenueInfo {
             private String name;
         }
     }
 
     @Data
+    @Builder
     public static class SeatInfo {
         private String className;
         private Integer floor;
@@ -43,6 +47,7 @@ public class BookingDetailResponse {
     }
 
     @Data
+    @Builder
     public static class PaymentInfo {
         private String method;
         private String status;
