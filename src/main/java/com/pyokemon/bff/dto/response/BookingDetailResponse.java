@@ -27,7 +27,7 @@ public class BookingDetailResponse {
     public static class EventInfo {
         private String title;
         private String thumbnailUrl;
-        private String eventDate;
+        private LocalDateTime eventDate;
         private VenueInfo venue;
 
         @Data

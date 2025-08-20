@@ -130,7 +130,7 @@ public class BookingDetailService {
                 .event(BookingDetailResponse.EventInfo.builder()
                         .title(event.getTitle())
                         .thumbnailUrl(event.getThumbnailUrl())
-                        .eventDate(schedule.getEventDate().toLocalDate().toString())
+                        .eventDate(schedule.getEventDate())
                         .venue(BookingDetailResponse.EventInfo.VenueInfo.builder().name(venue.getVenueName()).build())
                         .build())
                 .seat(BookingDetailResponse.SeatInfo.builder()
