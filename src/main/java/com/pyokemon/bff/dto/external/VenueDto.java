@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class VenueDto {
     private Long venueId;
-    private String name;
+    private String venueName;
 }
