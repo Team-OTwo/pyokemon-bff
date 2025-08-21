@@ -1,6 +1,7 @@
 package com.pyokemon.bff.controller;
 
 import com.pyokemon.bff.dto.response.MyPageBookingResponse;
+import com.pyokemon.bff.dto.response.PageResponse;
 import com.pyokemon.bff.service.MyPageBookingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,17 +21,17 @@ public class MyPageBookingController {
 
     /**
      * 사용자 마이페이지 예매 내역 조회
+     * <p>
+     * //     * @param accountId 사용자 ID
      *
-//     * @param accountId 사용자 ID
      * @return 예매 목록
      */
     @GetMapping
-    public Flux<MyPageBookingResponse> getMyBookings(ServerWebExchange exchange, @RequestParam(defaultValue = "0") int page,
-                                                     @RequestParam(defaultValue = "10") int size) {
-        System.out.println(exchange.getRequest().getHeaders().getFirst("x-auth-accountId"));
+    public Mono<PageResponse<MyPageBookingResponse>> getMyBookings(ServerWebExchange exchange, @RequestParam(defaultValue = "0") int page,
+                                                                   @RequestParam(defaultValue = "10") int size) {
         return Mono.justOrEmpty(exchange.getRequest().getHeaders().getFirst("x-auth-accountId"))
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("Missing x-auth-accountId header")))
                 .map(Long::valueOf)
-                .flatMapMany(accountId -> myPageBookingService.getMyBookings(accountId, page, size));
+                .flatMap(accountId -> myPageBookingService.getMyBookings(accountId, page, size));
     }
 }
