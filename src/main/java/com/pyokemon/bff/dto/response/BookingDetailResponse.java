@@ -25,6 +25,7 @@ public class BookingDetailResponse {
     @Data
     @Builder
     public static class EventInfo {
+        private Long eventScheduleId;
         private String title;
         private String thumbnailUrl;
         private LocalDateTime eventDate;

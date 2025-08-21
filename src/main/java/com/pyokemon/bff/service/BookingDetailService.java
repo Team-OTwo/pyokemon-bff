@@ -128,6 +128,7 @@ public class BookingDetailService {
                 .createdAt(booking.getUpdatedAt())
                 .user(BookingDetailResponse.UserInfo.builder().name(account.getName()).build())
                 .event(BookingDetailResponse.EventInfo.builder()
+                        .eventScheduleId(schedule.getEventScheduleId())
                         .title(event.getTitle())
                         .thumbnailUrl(event.getThumbnailUrl())
                         .eventDate(schedule.getEventDate())
