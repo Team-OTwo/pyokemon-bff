@@ -25,11 +25,12 @@ public class MyPageBookingController {
      * @return 예매 목록
      */
     @GetMapping
-    public Flux<MyPageBookingResponse> getMyBookings(ServerWebExchange exchange) {
+    public Flux<MyPageBookingResponse> getMyBookings(ServerWebExchange exchange, @RequestParam(defaultValue = "0") int page,
+                                                     @RequestParam(defaultValue = "10") int size) {
         System.out.println(exchange.getRequest().getHeaders().getFirst("x-auth-accountId"));
         return Mono.justOrEmpty(exchange.getRequest().getHeaders().getFirst("x-auth-accountId"))
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("Missing x-auth-accountId header")))
                 .map(Long::valueOf)
-                .flatMapMany(myPageBookingService::getMyBookings);
+                .flatMapMany(accountId -> myPageBookingService.getMyBookings(accountId, page, size));
     }
 }

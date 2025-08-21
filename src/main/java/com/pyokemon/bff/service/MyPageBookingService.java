@@ -34,16 +34,20 @@ public class MyPageBookingService {
      * @return 예매 목록
      */
     @Cacheable(value = "myBookings", key = "#accountId")
-    public Flux<MyPageBookingResponse> getMyBookings(Long accountId) {
+    public Flux<MyPageBookingResponse> getMyBookings(Long accountId, Integer page, Integer size) {
         // 1단계: account_id 기준 tb_booking 조회
         Flux<BookingDto> bookingsFlux = bookingServiceWebClient.get()
-                .uri("/booking/api/bookings/accounts/{accountId}/bookings", accountId)
+                .uri(uriBuilder -> uriBuilder
+                        .path("/booking/api/bookings/accounts/{accountId}/bookings/order")
+                        .queryParam("page", page)
+                        .queryParam("size", size)
+                        .build(accountId))
                 .retrieve()
                 .bodyToFlux(BookingDto.class);
 
 
         // 2단계: 공연/결제 병렬 조회 및 3단계: 공연/공연장 병렬 조회
-        return bookingsFlux.flatMap(booking -> {
+        return bookingsFlux.flatMapSequential(booking -> {
             Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
 
             Mono<EventScheduleDto> eventScheduleMono = getEventSchedule(booking.getEventScheduleId());
