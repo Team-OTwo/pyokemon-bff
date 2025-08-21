@@ -7,8 +7,10 @@ import com.pyokemon.bff.dto.external.EventScheduleDto;
 import com.pyokemon.bff.dto.external.PaymentDto;
 import com.pyokemon.bff.dto.external.VenueDto;
 import com.pyokemon.bff.dto.response.MyPageBookingResponse;
+import com.pyokemon.bff.dto.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -16,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,50 +37,64 @@ public class MyPageBookingService {
      * @return 예매 목록
      */
     @Cacheable(value = "myBookings", key = "#accountId")
-    public Flux<MyPageBookingResponse> getMyBookings(Long accountId, Integer page, Integer size) {
+    public Mono<PageResponse<MyPageBookingResponse>> getMyBookings(Long accountId, Integer page, Integer size) {
         // 1단계: account_id 기준 tb_booking 조회
-        Flux<BookingDto> bookingsFlux = bookingServiceWebClient.get()
+        Mono<PageResponse<BookingDto>> bookingsMono = bookingServiceWebClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/booking/api/bookings/accounts/{accountId}/bookings/order")
                         .queryParam("page", page)
                         .queryParam("size", size)
                         .build(accountId))
                 .retrieve()
-                .bodyToFlux(BookingDto.class);
+                .bodyToMono(new ParameterizedTypeReference<PageResponse<BookingDto>>() {
+                });
 
 
-        // 2단계: 공연/결제 병렬 조회 및 3단계: 공연/공연장 병렬 조회
-        return bookingsFlux.flatMapSequential(booking -> {
-            Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
+//         2단계: 공연/결제 병렬 조회 및 3단계: 공연/공연장 병렬 조회
+        return bookingsMono.flatMap(pageResponse -> {
+            List<BookingDto> bookingList = pageResponse.getContent();
 
-            Mono<EventScheduleDto> eventScheduleMono = getEventSchedule(booking.getEventScheduleId());
+            Flux<MyPageBookingResponse> responses = Flux.fromIterable(bookingList)
 
-            return Mono.zip(paymentMono, eventScheduleMono)
-                    .flatMap(tuple -> {
-                        PaymentDto payment = tuple.getT1();
-                        EventScheduleDto eventSchedule = tuple.getT2();
+                    .flatMapSequential(booking -> {
+                        Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
 
-                        Mono<EventDto> eventMono = getEvent(eventSchedule.getEventId());
-                        Mono<VenueDto> venueMono = getVenue(eventSchedule.getVenueId());
+                        Mono<EventScheduleDto> eventScheduleMono = getEventSchedule(booking.getEventScheduleId());
 
-                        return Mono.zip(eventMono, venueMono)
-                                .map(innerTuple -> {
-                                    EventDto event = innerTuple.getT1();
-                                    VenueDto venue = innerTuple.getT2();
+                        return Mono.zip(paymentMono, eventScheduleMono)
+                                .flatMap(tuple -> {
+                                    PaymentDto payment = tuple.getT1();
+                                    EventScheduleDto eventSchedule = tuple.getT2();
 
-                                    return MyPageBookingResponse.builder()
-                                            .bookingId(booking.getBookingId())
-                                            .eventTitle(event.getTitle())
-                                            .eventDate(formatEventDate(eventSchedule.getEventDate().format(DATE_FORMATTER)))
-                                            .venueName(venue.getVenueName())
-                                            .thumbnailUrl(event.getThumbnailUrl())
-                                            .totalPrice(payment.getAmount())
-                                            .status(booking.getStatus().getDisplayValue())
-                                            .build();
+                                    Mono<EventDto> eventMono = getEvent(eventSchedule.getEventId());
+                                    Mono<VenueDto> venueMono = getVenue(eventSchedule.getVenueId());
+
+                                    return Mono.zip(eventMono, venueMono)
+                                            .map(innerTuple -> {
+                                                EventDto event = innerTuple.getT1();
+                                                VenueDto venue = innerTuple.getT2();
+
+                                                return MyPageBookingResponse.builder()
+                                                        .bookingId(booking.getBookingId())
+                                                        .eventTitle(event.getTitle())
+                                                        .eventDate(formatEventDate(eventSchedule.getEventDate().format(DATE_FORMATTER)))
+                                                        .venueName(venue.getVenueName())
+                                                        .thumbnailUrl(event.getThumbnailUrl())
+                                                        .totalPrice(payment.getAmount())
+                                                        .status(booking.getStatus().getDisplayValue())
+                                                        .build();
+                                            });
                                 });
                     });
+            return responses.collectList()
+                    .map(myPageResponses -> new PageResponse<>(
+                            myPageResponses,
+                            pageResponse.getPage(),
+                            pageResponse.getTotalCount()
+                    ));
         });
     }
+
 
     private Mono<PaymentDto> getPayment(Long paymentId) {
         return paymentServiceWebClient.get()
