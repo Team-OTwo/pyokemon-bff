@@ -1,6 +1,8 @@
 package com.pyokemon.bff.controller;
 
 import com.pyokemon.bff.dto.response.BookingResponse;
+import com.pyokemon.bff.dto.response.MyPageBookingResponse;
+import com.pyokemon.bff.dto.response.PageResponse;
 import com.pyokemon.bff.service.BookingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,8 +25,10 @@ public class BookingController {
      * @return 예매 목록
      */
     @GetMapping
-    public Mono<BookingResponse> getBookings(
-            @RequestParam Long eventScheduleId) {
-        return bookingService.getBookings(eventScheduleId);
+    public Mono<PageResponse<BookingResponse>> getBookings(
+            @RequestParam Long eventScheduleId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return bookingService.getBookings(eventScheduleId, page, size);
     }
 }
