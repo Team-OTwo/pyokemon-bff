@@ -19,6 +19,8 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +40,7 @@ public class MyPageBookingService {
      */
     @Cacheable(value = "myBookings", key = "#accountId")
     public Mono<PageResponse<MyPageBookingResponse>> getMyBookings(Long accountId, Integer page, Integer size) {
-        // 1단계: account_id 기준 tb_booking 조회
+        // 1단계: Booking 조회
         Mono<PageResponse<BookingDto>> bookingsMono = bookingServiceWebClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/booking/api/bookings/accounts/{accountId}/bookings/order")
@@ -50,52 +52,68 @@ public class MyPageBookingService {
                 });
 
 
-//         2단계: 공연/결제 병렬 조회 및 3단계: 공연/공연장 병렬 조회
         return bookingsMono.flatMap(pageResponse -> {
             List<BookingDto> bookingList = pageResponse.getContent();
 
-            Flux<MyPageBookingResponse> responses = Flux.fromIterable(bookingList)
+            // 2단계: ID 모으기
+            List<Long> paymentIds = bookingList.stream().map(BookingDto::getPaymentId).filter(Objects::nonNull).distinct().toList();
+            List<Long> scheduleIds = bookingList.stream()
+                    .map(BookingDto::getEventScheduleId)
+                    .distinct().toList();
 
-                    .flatMapSequential(booking -> {
-                        Mono<PaymentDto> paymentMono = getPayment(booking.getPaymentId());
+            // 3단계: batch API 호출
+            Mono<Map<Long, PaymentDto>> paymentsMono = getPaymentsBatch(paymentIds);
+            Mono<Map<Long, EventScheduleDto>> schedulesMono = getEventSchedulesBatch(scheduleIds);
 
-                        Mono<EventScheduleDto> eventScheduleMono = getEventSchedule(booking.getEventScheduleId());
+            // 4단계: Event, Venue ID 모으고 batch 조회
+            Mono<Map<Long, EventDto>> eventsMono = schedulesMono.flatMap(schedules -> {
+                List<Long> eventIds = schedules.values().stream()
+                        .map(EventScheduleDto::getEventId)
+                        .distinct().toList();
+                return getEventsBatch(eventIds);
+            });
 
-                        return Mono.zip(paymentMono, eventScheduleMono)
-                                .flatMap(tuple -> {
-                                    PaymentDto payment = tuple.getT1();
-                                    EventScheduleDto eventSchedule = tuple.getT2();
+            Mono<Map<Long, VenueDto>> venuesMono = schedulesMono.flatMap(schedules -> {
+                List<Long> venueIds = schedules.values().stream()
+                        .map(EventScheduleDto::getVenueId)
+                        .distinct().toList();
+                return getVenuesBatch(venueIds);
+            });
 
-                                    Mono<EventDto> eventMono = getEvent(eventSchedule.getEventId());
-                                    Mono<VenueDto> venueMono = getVenue(eventSchedule.getVenueId());
 
-                                    return Mono.zip(eventMono, venueMono)
-                                            .map(innerTuple -> {
-                                                EventDto event = innerTuple.getT1();
-                                                VenueDto venue = innerTuple.getT2();
+            return Mono.zip(paymentsMono, schedulesMono, eventsMono, venuesMono)
+                    .map(tuple -> {
+                        Map<Long, PaymentDto> payments = tuple.getT1();
+                        Map<Long, EventScheduleDto> schedules = tuple.getT2();
+                        Map<Long, EventDto> events = tuple.getT3();
+                        Map<Long, VenueDto> venues = tuple.getT4();
 
-                                                return MyPageBookingResponse.builder()
-                                                        .bookingId(booking.getBookingId())
-                                                        .eventTitle(event.getTitle())
-                                                        .eventDate(formatEventDate(eventSchedule.getEventDate().format(DATE_FORMATTER)))
-                                                        .venueName(venue.getVenueName())
-                                                        .thumbnailUrl(event.getThumbnailUrl())
-                                                        .totalPrice(payment.getAmount())
-                                                        .status(booking.getStatus().getDisplayValue())
-                                                        .build();
-                                            });
-                                });
+                        List<MyPageBookingResponse> responses = bookingList.stream()
+                                .map(booking -> {
+                                    PaymentDto payment = payments.get(booking.getPaymentId());
+                                    EventScheduleDto schedule = schedules.get(booking.getEventScheduleId());
+                                    EventDto event = schedule != null ? events.get(schedule.getEventId()) : null;
+                                    VenueDto venue = schedule != null ? venues.get(schedule.getVenueId()) : null;
+
+                                    return MyPageBookingResponse.builder()
+                                            .bookingId(booking.getBookingId())
+                                            .eventTitle(event != null ? event.getTitle() : null)
+                                            .eventDate(schedule != null ?
+                                                    schedule.getEventDate().format(DATE_FORMATTER) : null)
+                                            .venueName(venue != null ? venue.getVenueName() : null)
+                                            .thumbnailUrl(event != null ? event.getThumbnailUrl() : null)
+                                            .totalPrice(payment != null ? payment.getAmount() : null)
+                                            .status(translateStatus(booking.getStatus().getDisplayValue()))
+                                            .build();
+                                }).toList();
+
+                        return new PageResponse<>(responses, pageResponse.getPage(), pageResponse.getTotalCount());
                     });
-            return responses.collectList()
-                    .map(myPageResponses -> new PageResponse<>(
-                            myPageResponses,
-                            pageResponse.getPage(),
-                            pageResponse.getTotalCount()
-                    ));
         });
     }
 
 
+    // 내부 호출
     private Mono<PaymentDto> getPayment(Long paymentId) {
         return paymentServiceWebClient.get()
                 .uri("/payment/api/payments/{id}", paymentId)
@@ -148,5 +166,45 @@ public class MyPageBookingService {
             case "CANCELLED" -> "취소됨";
             default -> status;
         };
+    }
+
+
+    // Batch 호출 헬퍼
+    private Mono<Map<Long, PaymentDto>> getPaymentsBatch(List<Long> ids) {
+        if (ids.isEmpty()) return Mono.just(Map.of());
+        return paymentServiceWebClient.post().uri("/payment/api/payments/_batch")
+                .bodyValue(Map.of("ids", ids))
+                .retrieve().bodyToFlux(PaymentDto.class)
+                .collectMap(PaymentDto::getPaymentId, p -> p);
+    }
+
+    private Mono<Map<Long, EventScheduleDto>> getEventSchedulesBatch(List<Long> ids) {
+        if (ids.isEmpty()) return Mono.just(Map.of());
+        return eventServiceWebClient.post()
+                .uri("/event/api/event-schedules/_batch")
+                .bodyValue(Map.of("ids", ids))
+                .retrieve()
+                .bodyToFlux(EventScheduleDto.class)
+                .collectMap(EventScheduleDto::getEventScheduleId, e -> e);
+    }
+
+    private Mono<Map<Long, EventDto>> getEventsBatch(List<Long> ids) {
+        if (ids.isEmpty()) return Mono.just(Map.of());
+        return eventServiceWebClient.post()
+                .uri("/event/api/bff/events/_batch")
+                .bodyValue(Map.of("ids", ids))
+                .retrieve()
+                .bodyToFlux(EventDto.class)
+                .collectMap(EventDto::getEventId, e -> e);
+    }
+
+    private Mono<Map<Long, VenueDto>> getVenuesBatch(List<Long> ids) {
+        if (ids.isEmpty()) return Mono.just(Map.of());
+        return eventServiceWebClient.post()
+                .uri("/event/api/venues/_batch")
+                .bodyValue(Map.of("ids", ids))
+                .retrieve()
+                .bodyToFlux(VenueDto.class)
+                .collectMap(VenueDto::getVenueId, v -> v);
     }
 }
