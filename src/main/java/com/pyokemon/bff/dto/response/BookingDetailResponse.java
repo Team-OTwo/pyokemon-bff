@@ -1,6 +1,5 @@
 package com.pyokemon.bff.dto.response;
 
-
 import lombok.Data;
 import lombok.Builder;
 import java.time.LocalDateTime;
