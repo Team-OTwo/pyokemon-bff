@@ -2,32 +2,22 @@ package com.pyokemon.bff.dto.response;
 
 import lombok.Data;
 import lombok.Builder;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class BookingDetailResponse {
+public class TicketDetailResponse {
+
     private Long bookingId;
-    private String status;
-    private LocalDateTime createdAt;
-    private UserInfo user;
     private EventInfo event;
     private SeatInfo seat;
-    private PaymentInfo payment;
-
-    @Data
-    @Builder
-    public static class UserInfo {
-        private String name;
-    }
+    private String tenantName;
 
     @Data
     @Builder
     public static class EventInfo {
-        private Long eventScheduleId;
         private String title;
         private String thumbnailUrl;
-        private LocalDateTime eventDate;
+        private String eventDate;
         private VenueInfo venue;
 
         @Data
@@ -44,14 +34,5 @@ public class BookingDetailResponse {
         private Integer floor;
         private String row;
         private String col;
-    }
-
-    @Data
-    @Builder
-    public static class PaymentInfo {
-        private String method;
-        private String status;
-        private String paidAt;
-        private Long amount;
     }
 }
