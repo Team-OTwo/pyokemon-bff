@@ -93,7 +93,7 @@ public class TicketDetailService {
 
     private Mono<TenantDto> fetchTenant(Long tenantId) {
         return accountServiceWebClient.get()
-                .uri("/account/api/tenants/{tenantId}", tenantId)
+                .uri("/account/api/bff/tenants/{tenantId}", tenantId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ResourceNotFoundException("Tenant not found")))
                 .bodyToMono(TenantDto.class);
