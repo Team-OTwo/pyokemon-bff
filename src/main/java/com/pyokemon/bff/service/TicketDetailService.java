@@ -156,7 +156,7 @@ public class TicketDetailService {
                 .bookingId(booking.getBookingId())
                 .event(eventInfo)
                 .seat(seatInfo)
-                .tenantName(tenant.getTenantName())
+                .tenantName(tenant.getName())
                 .build();
     }
 }

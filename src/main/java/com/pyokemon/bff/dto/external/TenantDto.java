@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TenantDto {
     private Long tenantId;
-    private String tenantName;
+    private String name;
 }
