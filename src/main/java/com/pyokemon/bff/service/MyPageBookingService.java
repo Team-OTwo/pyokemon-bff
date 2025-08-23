@@ -103,7 +103,7 @@ public class MyPageBookingService {
                                             .venueName(venue != null ? venue.getVenueName() : null)
                                             .thumbnailUrl(event != null ? event.getThumbnailUrl() : null)
                                             .totalPrice(payment != null ? payment.getAmount() : null)
-                                            .status(translateStatus(booking.getStatus().getDisplayValue()))
+                                            .status(booking.getStatus().getDisplayValue())
                                             .build();
                                 }).toList();
 
@@ -147,25 +147,6 @@ public class MyPageBookingService {
      */
     private String formatEventDate(String eventDate) {
         return eventDate;
-    }
-
-    /**
-     * 상태값 번역
-     *
-     * @param status 원본 상태값 (BOOKED, PAID, CANCELLED)
-     * @return 번역된 상태값 (예매 완료, 결제 완료, 취소됨)
-     */
-    private String translateStatus(String status) {
-        if (status == null) {
-            return "";
-        }
-
-        return switch (status.toUpperCase()) {
-            case "BOOKED" -> "예매 완료";
-            case "PAID" -> "결제 완료";
-            case "CANCELLED" -> "취소됨";
-            default -> status;
-        };
     }
 
 
