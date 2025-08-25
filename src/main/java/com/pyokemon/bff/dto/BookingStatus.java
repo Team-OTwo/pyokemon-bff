@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public enum BookingStatus {
-    PENDDING("PENDDING", "예약 대기"),
+    PENDING("PENDING", "예약 대기"),
     BOOKED("BOOKED", "예약 완료"),
     CANCELED("CANCELED", "예약 취소");
 
@@ -29,7 +29,7 @@ public enum BookingStatus {
     public static BookingStatus fromValue(String value) {
         if (value == null) {
             log.warn("Booking status is null, defaulting to PENDING");
-            return PENDDING;
+            return PENDING;
         }
         for (BookingStatus status : BookingStatus.values()) {
             if (status.value.equalsIgnoreCase(value)) {
@@ -37,6 +37,6 @@ public enum BookingStatus {
             }
         }
         log.warn("Unknown Booking status: {}, defaulting to PENDDING", value);
-        return PENDDING;
+        return PENDING;
     }
 }
