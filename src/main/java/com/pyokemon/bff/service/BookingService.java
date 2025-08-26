@@ -32,8 +32,7 @@ public class BookingService {
 
         Mono<Ctx> ctxMono = getEventSchedule(eventScheduleId)
                 .flatMap(es -> Mono.zip(getEvent(es.getEventId()), getVenue(es.getVenueId()))
-                        .map(t -> new Ctx(es, t.getT1(), t.getT2())))
-                .cache();
+                        .map(t -> new Ctx(es, t.getT1(), t.getT2())));
 
         Mono<PageResponse<BookingDto>> bookingsMono = bookingServiceWebClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -43,19 +42,20 @@ public class BookingService {
                         // 필요 시 .queryParam("sort", "createdAt,desc")
                         .build(eventScheduleId))
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<PageResponse<BookingDto>>() {})
-                .cache();
+                .bodyToMono(new ParameterizedTypeReference<PageResponse<BookingDto>>() {});
 
-        Flux<BookingDto> bookingsFlux = bookingsMono
-                .flatMapMany(bm -> Flux.fromIterable(bm.getContent()))
-                .cache();
+        Mono<List<BookingDto>> bookingsListMono = bookingsMono.map(PageResponse::getContent);
 
-        // ID 수집 (결제 전 단계 대비: paymentId null 제외)
-        Mono<List<Long>> accountIdsMono = bookingsFlux.map(BookingDto::getAccountId).distinct().collectList();
-        Mono<List<Long>> paymentIdsMono = bookingsFlux.map(BookingDto::getPaymentId)
-                .filter(Objects::nonNull) // null 제거
-                .distinct().collectList();
-        Mono<List<Long>> seatIdsMono    = bookingsFlux.map(BookingDto::getSeatId).distinct().collectList();
+        // 4) 배치 ID 추출(중복 제거)
+        Mono<List<Long>> accountIdsMono = bookingsListMono.map(list ->
+                list.stream().map(BookingDto::getAccountId).distinct().toList()
+        );
+        Mono<List<Long>> paymentIdsMono = bookingsListMono.map(list ->
+                list.stream().map(BookingDto::getPaymentId).filter(Objects::nonNull).distinct().toList()
+        );
+        Mono<List<Long>> seatIdsMono = bookingsListMono.map(list ->
+                list.stream().map(BookingDto::getSeatId).distinct().toList()
+        );
 
         // 배치 조회
         Mono<Map<Long, SeatDto>> seatsMapMono = seatIdsMono.flatMap(this::getSeatsBatch);
@@ -68,7 +68,7 @@ public class BookingService {
 
         // 아이템 조합
         Mono<List<BookingItem>> itemsMono = Mono.zip(
-                accountsMapMono, paymentsMapMono, seatsMapMono, seatClassesMapMono, bookingsFlux.collectList()
+                accountsMapMono, paymentsMapMono, seatsMapMono, seatClassesMapMono, bookingsListMono
         ).map(t -> {
             Map<Long, AccountDto> accounts = t.getT1();
             Map<Long, PaymentDto> payments = t.getT2();
