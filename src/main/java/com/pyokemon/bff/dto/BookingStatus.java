@@ -8,7 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 public enum BookingStatus {
     PENDING("PENDING", "예약 대기"),
     BOOKED("BOOKED", "예약 완료"),
-    CANCELED("CANCELED", "예약 취소");
+    CANCELED("CANCELED", "예약 취소"),
+    FAILED("FAILED", "예약 실패");
 
     private final String value;
     private final String displayValue;
