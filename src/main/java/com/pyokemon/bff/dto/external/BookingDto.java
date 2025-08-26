@@ -17,6 +17,6 @@ public class BookingDto {
     private Long tenantId;
     private Long seatId;
     private Long paymentId;
-    private BookingStatus status;  // PENDDING, BOOKED, CANCELLED
+    private BookingStatus status;  // PENDING, BOOKED, CANCELED, FAILED
     private LocalDateTime updatedAt;
 }
