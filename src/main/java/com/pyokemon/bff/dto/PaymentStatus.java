@@ -9,7 +9,8 @@ public enum PaymentStatus {
     READY("READY", "결제 대기"),
     DONE("DONE", "결제 완료"),
     CANCELED("CANCELED", "결제 취소"),
-    FAILED("FAILED", "결제 실패");
+    FAILED("FAILED", "결제 실패"),
+    EXPIRED("EXPIRED", "결제 만료");
 
     private final String value;
     private final String displayValue;
