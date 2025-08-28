@@ -51,7 +51,7 @@ public class TenantDashboardService {
 
     private Mono<List<Long>> fetchScheduleIdsByTenant(Long tenantId, int year, int month) {
         return eventServiceWebClient.get()
-                .uri("event/api/events/tenant/schedules-by-tenant?year={y}&month={m}", year, month)
+                .uri("/event/api/events/tenant/schedules-by-tenant?year={y}&month={m}", year, month)
                 .header("x-auth-accountId", tenantId.toString())
                 .retrieve()
                 .bodyToMono(ScheduleIdsResponseDto.class)
@@ -87,7 +87,7 @@ public class TenantDashboardService {
     private Mono<TotalSoldTicketsResponseDto> fetchTotalSoldTickets(List<Long> scheduleIds) {
         String ids = scheduleIds.stream().map(String::valueOf).collect(Collectors.joining(","));
         return bookingServiceWebClient.get()
-                .uri("booking/api/bookings/summary/sold-count?scheduleIds={ids}", ids)
+                .uri("/booking/api/bookings/summary/sold-count?scheduleIds={ids}", ids)
                 .retrieve()
                 .bodyToMono(TotalSoldTicketsResponseDto.class);
     }
