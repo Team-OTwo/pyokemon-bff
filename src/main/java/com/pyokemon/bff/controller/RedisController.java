@@ -47,11 +47,6 @@ public class RedisController {
         return processBooleanResponse(redisService.releaseSeatHold(scheduleId, seatId, userId));
     }
 
-    @PostMapping("/seats/confirm")
-    public Mono<ResponseEntity<Void>> confirmSeat(@RequestParam Long scheduleId, @RequestParam Long seatId, @RequestParam String userId) {
-        return processBooleanResponse(redisService.confirmSeat(scheduleId, seatId, userId));
-    }
-
     @PostMapping("/seats/cancel")
     public Mono<ResponseEntity<Void>> cancelSeat(@RequestParam Long scheduleId, @RequestParam Long seatId) {
         return redisService.cancelSeat(scheduleId, seatId)

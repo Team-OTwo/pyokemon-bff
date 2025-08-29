@@ -1,5 +1,7 @@
 package com.pyokemon.bff.service;
 
+import com.pyokemon.bff.dto.BookingStatus;
+import com.pyokemon.bff.dto.external.BookingDto;
 import com.pyokemon.bff.dto.external.EventScheduleDto;
 import com.pyokemon.bff.dto.external.SeatClassDto;
 import com.pyokemon.bff.dto.external.SeatDto;
@@ -31,6 +33,9 @@ public class RedisService {
     @Qualifier("eventServiceWebClient")
     private final WebClient eventServiceWebClient;
 
+    @Qualifier("bookingServiceWebClient")
+    private final WebClient bookingServiceWebClient;
+
     // --- Key Patterns ---
     private static final String VENUE_SCHEDULE_KEY_PATTERN = "venue:schedule:%d:%d";
     private static final String SEAT_CLASS_STATUS_KEY_PATTERN = "seat:class:status:%d:%s";
@@ -47,14 +52,6 @@ public class RedisService {
             "if redis.call('get', KEYS[1]) == ARGV[1] then " +
             "  return redis.call('del', KEYS[1]) " +
             "else return 0 end", Long.class);
-
-    private static final RedisScript<Long> CONFIRM_SEAT_SCRIPT = new DefaultRedisScript<>(
-            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-            "  redis.call('del', KEYS[1]); " +
-            "  redis.call('hset', KEYS[2], ARGV[2], 'BOOKED'); " +
-            "  return 1; " +
-            "else return 0 end", Long.class);
-
 
     public Mono<Void> initSeatStatuses(Long scheduleId, Long venueId) {
         log.info("BFF: 좌석 상태 초기화 시작: scheduleId={}, venueId={}", scheduleId, venueId);
@@ -88,6 +85,34 @@ public class RedisService {
                                 return Mono.empty();
                             });
                 })
+                .then();
+    }
+
+    public Mono<Void> synchronizeBookingsWithRDB(Long eventScheduleId) {
+        log.info("BFF: RDB와 예약 상태 동기화 시작: eventScheduleId={}", eventScheduleId);
+        return fetchBookingsForSchedule(eventScheduleId)
+                .flatMap(booking -> {
+                    Mono<Void> operation = Mono.empty();
+                    if (booking.getStatus() == BookingStatus.BOOKED) {
+                        operation = fetchSeatDetails(booking.getSeatId())
+                            .doOnNext(seatDetails -> {
+                                String hashKey = String.format(SEAT_CLASS_STATUS_KEY_PATTERN, eventScheduleId, seatDetails.getClassName());
+                                String seatId = String.valueOf(booking.getSeatId());
+                                String bookingId = String.valueOf(booking.getBookingId());
+                                redisTemplate.opsForHash().put(hashKey, seatId, bookingId);
+                                log.debug("BFF: Redis 좌석 '예약 완료' 상태로 업데이트: scheduleId={}, seatId={}, bookingId={}", eventScheduleId, seatId, bookingId);
+                            }).then();
+                    } else if (booking.getStatus() == BookingStatus.PENDING) {
+                        operation = Mono.fromRunnable(() -> {
+                            String holdKey = String.format(SEAT_HOLD_KEY_PATTERN, eventScheduleId, booking.getSeatId());
+                            String accountId = String.valueOf(booking.getAccountId());
+                            redisTemplate.opsForValue().set(holdKey, accountId, Duration.ofSeconds(SEAT_HOLD_DURATION_SECONDS));
+                            log.debug("BFF: Redis 좌석 '임시 점유' 상태로 업데이트: scheduleId={}, seatId={}, accountId={}", eventScheduleId, booking.getSeatId(), accountId);
+                        });
+                    }
+                    return operation;
+                })
+                .doOnComplete(() -> log.info("BFF: RDB와 예약 상태 동기화 완료: eventScheduleId={}", eventScheduleId))
                 .then();
     }
 
@@ -146,19 +171,6 @@ public class RedisService {
                 .map(result -> result == 1L);
     }
 
-    public Mono<Boolean> confirmSeat(Long scheduleId, Long seatId, String userId) {
-        log.info("BFF: 좌석 예약 확정 요청: scheduleId={}, seatId={}, userId={}", scheduleId, seatId, userId);
-        return fetchSeatDetails(seatId).flatMap(seatDetails -> {
-            String className = seatDetails.getClassName();
-            String holdKey = String.format(SEAT_HOLD_KEY_PATTERN, scheduleId, seatId);
-            String hashKey = String.format(SEAT_CLASS_STATUS_KEY_PATTERN, scheduleId, className);
-
-            return Mono.fromCallable(() -> redisTemplate.execute(CONFIRM_SEAT_SCRIPT,
-                    List.of(holdKey, hashKey), userId, String.valueOf(seatId), "BOOKED"))
-                    .map(result -> result == 1L);
-        });
-    }
-
     public Mono<Void> cancelSeat(Long scheduleId, Long seatId) {
         log.info("BFF: 좌석 예약 취소 요청: scheduleId={}, seatId={}", scheduleId, seatId);
         return fetchSeatDetails(seatId).flatMap(seatDetails -> {
@@ -175,6 +187,13 @@ public class RedisService {
                 .uri("/api/v1/event-schedules/{eventScheduleId}", eventScheduleId)
                 .retrieve()
                 .bodyToMono(EventScheduleDto.class);
+    }
+
+    private Flux<BookingDto> fetchBookingsForSchedule(Long eventScheduleId) {
+        return bookingServiceWebClient.get()
+                .uri("/api/v1/bookings/schedules/{eventScheduleId}", eventScheduleId)
+                .retrieve()
+                .bodyToFlux(BookingDto.class);
     }
 
     private Flux<SeatDto> fetchSeatsForVenue(Long venueId) {
