@@ -199,7 +199,7 @@ public class UserBookingListService {
                 .map(BookingDto::getTenantId)
                 .filter(Objects::nonNull).distinct().toList();
         if (tenantIds.isEmpty()) return Mono.just(Map.of());
-        return accountServiceWebClient.post().uri("account/api/bff/tenants/_batch")
+        return accountServiceWebClient.post().uri("account/api/tenants/_batch")
                 .bodyValue(Map.of("ids", tenantIds))
                 .retrieve()
                 .bodyToFlux(TenantDto.class)
