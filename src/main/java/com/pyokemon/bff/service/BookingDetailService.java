@@ -74,7 +74,7 @@ public class BookingDetailService {
 
     private Mono<EventScheduleDto> fetchEventSchedule(Long eventScheduleId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/event-schedules/{eventScheduleId}", eventScheduleId)
+                .uri("/event/api/events/event-schedules/{eventScheduleId}", eventScheduleId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ResourceNotFoundException("Event schedule not found")))
                 .bodyToMono(EventScheduleDto.class);
@@ -90,7 +90,7 @@ public class BookingDetailService {
 
     private Mono<SeatDto> fetchSeat(Long seatId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/seats/{seatId}", seatId)
+                .uri("/event/api/events/seats/{seatId}", seatId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ResourceNotFoundException("Seat not found")))
                 .bodyToMono(SeatDto.class);
@@ -98,7 +98,7 @@ public class BookingDetailService {
 
     private Mono<EventDto> fetchEvent(Long eventId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/bff/events/{eventId}", eventId)
+                .uri("/event/api/events/bff/{eventId}", eventId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ResourceNotFoundException("Event not found")))
                 .bodyToMono(EventDto.class);
@@ -106,7 +106,7 @@ public class BookingDetailService {
 
     private Mono<VenueDto> fetchVenue(Long venueId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/venues/{venueId}", venueId)
+                .uri("/event/api/events/venues/{venueId}", venueId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ResourceNotFoundException("Venue not found")))
                 .bodyToMono(VenueDto.class);
@@ -114,7 +114,7 @@ public class BookingDetailService {
 
     private Mono<SeatClassDto> fetchSeatClass(Long seatClassId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/seat-classes/{seatClassId}", seatClassId)
+                .uri("/event/api/events/seat-classes/{seatClassId}", seatClassId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ResourceNotFoundException("Seat class not found")))
                 .bodyToMono(SeatClassDto.class);

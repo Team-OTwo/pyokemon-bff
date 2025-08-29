@@ -162,7 +162,7 @@ public class MyPageBookingService {
     private Mono<Map<Long, EventScheduleDto>> getEventSchedulesBatch(List<Long> ids) {
         if (ids.isEmpty()) return Mono.just(Map.of());
         return eventServiceWebClient.post()
-                .uri("/event/api/event-schedules/_batch")
+                .uri("/event/api/events/event-schedules/_batch")
                 .bodyValue(Map.of("ids", ids))
                 .retrieve()
                 .bodyToFlux(EventScheduleDto.class)
@@ -172,7 +172,7 @@ public class MyPageBookingService {
     private Mono<Map<Long, EventDto>> getEventsBatch(List<Long> ids) {
         if (ids.isEmpty()) return Mono.just(Map.of());
         return eventServiceWebClient.post()
-                .uri("/event/api/bff/events/_batch")
+                .uri("/event/api/events/bff/_batch")
                 .bodyValue(Map.of("ids", ids))
                 .retrieve()
                 .bodyToFlux(EventDto.class)
@@ -182,7 +182,7 @@ public class MyPageBookingService {
     private Mono<Map<Long, VenueDto>> getVenuesBatch(List<Long> ids) {
         if (ids.isEmpty()) return Mono.just(Map.of());
         return eventServiceWebClient.post()
-                .uri("/event/api/venues/_batch")
+                .uri("/event/api/events/venues/_batch")
                 .bodyValue(Map.of("ids", ids))
                 .retrieve()
                 .bodyToFlux(VenueDto.class)

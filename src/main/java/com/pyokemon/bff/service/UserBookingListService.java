@@ -187,7 +187,7 @@ public class UserBookingListService {
                 .map(BookingDto::getEventScheduleId)
                 .filter(Objects::nonNull).distinct().toList();
         if (esIds.isEmpty()) return Mono.just(Map.of());
-        return eventServiceWebClient.post().uri("/event/api/event-schedules/_batch")
+        return eventServiceWebClient.post().uri("/event/api/events/event-schedules/_batch")
                 .bodyValue(Map.of("ids", esIds))
                 .retrieve()
                 .bodyToFlux(EventScheduleDto.class)
@@ -211,7 +211,7 @@ public class UserBookingListService {
                 .map(EventScheduleDto::getVenueId)
                 .filter(Objects::nonNull).distinct().toList();
         if (venueIds.isEmpty()) return Mono.just(Map.of());
-        return eventServiceWebClient.post().uri("/event/api/venues/_batch")
+        return eventServiceWebClient.post().uri("/event/api/events/venues/_batch")
                 .bodyValue(Map.of("ids", venueIds))
                 .retrieve()
                 .bodyToFlux(VenueDto.class)
@@ -223,7 +223,7 @@ public class UserBookingListService {
                 .map(EventScheduleDto::getEventId)
                 .filter(Objects::nonNull).distinct().toList();
         if (eventIds.isEmpty()) return Mono.just(Map.of());
-        return eventServiceWebClient.post().uri("/event/api/bff/events/_batch")
+        return eventServiceWebClient.post().uri("/event/api/events/bff/_batch")
                 .bodyValue(Map.of("ids", eventIds))
                 .retrieve()
                 .bodyToFlux(EventDto.class)
@@ -247,7 +247,7 @@ public class UserBookingListService {
     private Mono<List<Long>> fetchScheduleIdsByEventIds(List<Long> eventIds) {
         if (eventIds == null || eventIds.isEmpty()) return Mono.just(List.of());
         return eventServiceWebClient.post()
-                .uri("/event/api/event-schedules/_ids-by-events")
+                .uri("/event/api/events/event-schedules/_ids-by-events")
                 .bodyValue(Map.of("ids", eventIds)) // 소문자 ids 주의
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<Long>>() {});
