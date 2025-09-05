@@ -128,21 +128,21 @@ public class BookingService {
 
     private Mono<EventScheduleDto> getEventSchedule(Long eventScheduleId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/events/event-schedules/{eventScheduleId}", eventScheduleId)
+                .uri("/event/api/event-schedules/{eventScheduleId}", eventScheduleId)
                 .retrieve()
                 .bodyToMono(EventScheduleDto.class);
     }
 
     private Mono<EventDto> getEvent(Long eventId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/events/bff/{eventId}", eventId)
+                .uri("/event/api/bff/events/{eventId}", eventId)
                 .retrieve()
                 .bodyToMono(EventDto.class);
     }
 
     private Mono<VenueDto> getVenue(Long venueId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/events/venues/{venueId}", venueId)
+                .uri("/event/api/venues/{venueId}", venueId)
                 .retrieve()
                 .bodyToMono(VenueDto.class);
     }
@@ -166,7 +166,7 @@ public class BookingService {
 
     private Mono<Map<Long, SeatDto>> getSeatsBatch(List<Long> ids) {
         if (ids.isEmpty()) return Mono.just(Map.of());
-        return eventServiceWebClient.post().uri("/event/api/events/seats/_batch")
+        return eventServiceWebClient.post().uri("/event/api/seats/_batch")
                 .bodyValue(Map.of("ids", ids))
                 .retrieve().bodyToFlux(SeatDto.class)
                 .collectMap(SeatDto::getSeatId, s -> s);
@@ -174,7 +174,7 @@ public class BookingService {
 
     private Mono<Map<Long, SeatClassDto>> getSeatClassesBatch(List<Long> ids) {
         if (ids.isEmpty()) return Mono.just(Map.of());
-        return eventServiceWebClient.post().uri("/event/api/events/seat-classes/_batch")
+        return eventServiceWebClient.post().uri("/event/api/seat-classes/_batch")
                 .bodyValue(Map.of("ids", ids))
                 .retrieve().bodyToFlux(SeatClassDto.class)
                 .collectMap(SeatClassDto::getSeatClassId, sc -> sc);
