@@ -36,7 +36,7 @@ public class BookingService {
 
         Mono<PageResponse<BookingDto>> bookingsMono = bookingServiceWebClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/booking/api/bookings/event-schedules/{eventScheduleId}/bookings")
+                        .path("/booking/api/bookings/event-schedules/{eventScheduleId}/bookings/page")
                         .queryParam("page", page)
                         .queryParam("size", size)
                         // 필요 시 .queryParam("sort", "createdAt,desc")
