@@ -36,7 +36,7 @@ public class BookingService {
 
         Mono<PageResponse<BookingDto>> bookingsMono = bookingServiceWebClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/booking/api/bookings/event-schedules/{eventScheduleId}/bookings")
+                        .path("/booking/api/bookings/event-schedules/{eventScheduleId}/bookings/page")
                         .queryParam("page", page)
                         .queryParam("size", size)
                         // 필요 시 .queryParam("sort", "createdAt,desc")
@@ -90,7 +90,7 @@ public class BookingService {
                         .build();
 
                 return BookingItem.builder()
-                        .bookingId(b.getBookingId())
+                        .bookingId(b.getId())
                         .userName(account != null ? account.getName() : null)
                         .seat(seatInfo)
                         .totalPrice(payment != null ? payment.getAmount() : null)
@@ -106,7 +106,7 @@ public class BookingService {
             PageResponse<BookingDto> bm = t.getT3();
 
             BookingResponse body = BookingResponse.builder()
-                    .eventId(ctx.event().getEventId())
+                    .eventId(ctx.event().getId())
                     .eventTitle(ctx.event().getTitle())
                     .eventDate(ctx.schedule().getEventDate().toLocalDate().toString())
                     .venueName(ctx.venue().getVenueName())
@@ -161,7 +161,7 @@ public class BookingService {
         return paymentServiceWebClient.post().uri("/payment/api/payments/_batch")
                 .bodyValue(Map.of("ids", ids))
                 .retrieve().bodyToFlux(PaymentDto.class)
-                .collectMap(PaymentDto::getPaymentId, p -> p);
+                .collectMap(PaymentDto::getId, p -> p);
     }
 
     private Mono<Map<Long, SeatDto>> getSeatsBatch(List<Long> ids) {
@@ -169,7 +169,7 @@ public class BookingService {
         return eventServiceWebClient.post().uri("/event/api/seats/_batch")
                 .bodyValue(Map.of("ids", ids))
                 .retrieve().bodyToFlux(SeatDto.class)
-                .collectMap(SeatDto::getSeatId, s -> s);
+                .collectMap(SeatDto::getId, s -> s);
     }
 
     private Mono<Map<Long, SeatClassDto>> getSeatClassesBatch(List<Long> ids) {
@@ -177,6 +177,6 @@ public class BookingService {
         return eventServiceWebClient.post().uri("/event/api/seat-classes/_batch")
                 .bodyValue(Map.of("ids", ids))
                 .retrieve().bodyToFlux(SeatClassDto.class)
-                .collectMap(SeatClassDto::getSeatClassId, sc -> sc);
+                .collectMap(SeatClassDto::getId, sc -> sc);
     }
 }

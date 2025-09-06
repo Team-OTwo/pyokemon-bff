@@ -144,7 +144,7 @@ public class UserBookingListService {
                         EventDto ev = evMap.get(es.getEventId());
 
                         items.add(UserBookingListResponse.builder()
-                                .bookingId(b.getBookingId())
+                                .bookingId(b.getId())
                                 .eventTitle(ev != null ? ev.getTitle() : null)
                                 .eventDate(es.getEventDate())
                                 .venueName(vn != null ? vn.getVenueName() : null)
@@ -191,7 +191,7 @@ public class UserBookingListService {
                 .bodyValue(Map.of("ids", esIds))
                 .retrieve()
                 .bodyToFlux(EventScheduleDto.class)
-                .collectMap(EventScheduleDto::getEventScheduleId, it -> it);
+                .collectMap(EventScheduleDto::getId, it -> it);
     }
 
     private Mono<Map<Long, TenantDto>> batchTenantsFromBookings(List<BookingDto> bookings) {
@@ -203,7 +203,7 @@ public class UserBookingListService {
                 .bodyValue(Map.of("ids", tenantIds))
                 .retrieve()
                 .bodyToFlux(TenantDto.class)
-                .collectMap(TenantDto::getTenantId, it -> it);
+                .collectMap(TenantDto::getId, it -> it);
     }
 
     private Mono<Map<Long, VenueDto>> batchVenuesFromSchedules(Map<Long, EventScheduleDto> esMap) {
@@ -215,7 +215,7 @@ public class UserBookingListService {
                 .bodyValue(Map.of("ids", venueIds))
                 .retrieve()
                 .bodyToFlux(VenueDto.class)
-                .collectMap(VenueDto::getVenueId, it -> it);
+                .collectMap(VenueDto::getId, it -> it);
     }
 
     private Mono<Map<Long, EventDto>> batchEventsFromSchedules(Map<Long, EventScheduleDto> esMap) {
@@ -227,7 +227,7 @@ public class UserBookingListService {
                 .bodyValue(Map.of("ids", eventIds))
                 .retrieve()
                 .bodyToFlux(EventDto.class)
-                .collectMap(EventDto::getEventId, it -> it);
+                .collectMap(EventDto::getId, it -> it);
     }
 
     // ===================== Common helpers =====================

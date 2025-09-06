@@ -153,7 +153,7 @@ public class TicketDetailService {
                 .build();
 
         return TicketDetailResponse.builder()
-                .bookingId(booking.getBookingId())
+                .bookingId(booking.getId())
                 .event(eventInfo)
                 .seat(seatInfo)
                 .tenantName(tenant.getName())

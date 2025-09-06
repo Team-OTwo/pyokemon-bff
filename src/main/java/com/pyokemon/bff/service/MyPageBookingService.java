@@ -96,7 +96,7 @@ public class MyPageBookingService {
                                     VenueDto venue = schedule != null ? venues.get(schedule.getVenueId()) : null;
 
                                     return MyPageBookingResponse.builder()
-                                            .bookingId(booking.getBookingId())
+                                            .bookingId(booking.getId())
                                             .eventTitle(event != null ? event.getTitle() : null)
                                             .eventDate(schedule != null ?
                                                     schedule.getEventDate().format(DATE_FORMATTER) : null)
@@ -156,7 +156,7 @@ public class MyPageBookingService {
         return paymentServiceWebClient.post().uri("/payment/api/payments/_batch")
                 .bodyValue(Map.of("ids", ids))
                 .retrieve().bodyToFlux(PaymentDto.class)
-                .collectMap(PaymentDto::getPaymentId, p -> p);
+                .collectMap(PaymentDto::getId, p -> p);
     }
 
     private Mono<Map<Long, EventScheduleDto>> getEventSchedulesBatch(List<Long> ids) {
@@ -166,7 +166,7 @@ public class MyPageBookingService {
                 .bodyValue(Map.of("ids", ids))
                 .retrieve()
                 .bodyToFlux(EventScheduleDto.class)
-                .collectMap(EventScheduleDto::getEventScheduleId, e -> e);
+                .collectMap(EventScheduleDto::getId, e -> e);
     }
 
     private Mono<Map<Long, EventDto>> getEventsBatch(List<Long> ids) {
@@ -176,7 +176,7 @@ public class MyPageBookingService {
                 .bodyValue(Map.of("ids", ids))
                 .retrieve()
                 .bodyToFlux(EventDto.class)
-                .collectMap(EventDto::getEventId, e -> e);
+                .collectMap(EventDto::getId, e -> e);
     }
 
     private Mono<Map<Long, VenueDto>> getVenuesBatch(List<Long> ids) {
@@ -186,6 +186,6 @@ public class MyPageBookingService {
                 .bodyValue(Map.of("ids", ids))
                 .retrieve()
                 .bodyToFlux(VenueDto.class)
-                .collectMap(VenueDto::getVenueId, v -> v);
+                .collectMap(VenueDto::getId, v -> v);
     }
 }

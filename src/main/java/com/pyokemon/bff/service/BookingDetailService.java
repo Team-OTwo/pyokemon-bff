@@ -114,7 +114,7 @@ public class BookingDetailService {
 
     private Mono<SeatClassDto> fetchSeatClass(Long seatClassId) {
         return eventServiceWebClient.get()
-                .uri("/event/api/seat-classes/{seatClassId}}", seatClassId)
+                .uri("/event/api/seat-classes/{seatClassId}", seatClassId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ResourceNotFoundException("Seat class not found")))
                 .bodyToMono(SeatClassDto.class);
@@ -123,12 +123,12 @@ public class BookingDetailService {
     private BookingDetailResponse mapToResponse(BookingDto booking, AccountDto account, EventScheduleDto schedule,
                                                 PaymentDto payment, SeatDto seat, EventDto event, VenueDto venue, SeatClassDto seatClass) {
         return BookingDetailResponse.builder()
-                .bookingId(booking.getBookingId())
+                .bookingId(booking.getId())
                 .status(booking.getStatus().getDisplayValue())
                 .createdAt(booking.getUpdatedAt())
                 .user(BookingDetailResponse.UserInfo.builder().name(account.getName()).build())
                 .event(BookingDetailResponse.EventInfo.builder()
-                        .eventScheduleId(schedule.getEventScheduleId())
+                        .eventScheduleId(schedule.getId())
                         .title(event.getTitle())
                         .thumbnailUrl(event.getThumbnailUrl())
                         .eventDate(schedule.getEventDate())

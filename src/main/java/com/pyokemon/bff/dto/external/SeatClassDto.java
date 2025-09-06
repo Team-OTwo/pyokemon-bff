@@ -8,8 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SeatClassDto {
-    private Long seatClassId;
+    private Long id;
     private String className;
     private Integer priority;
-    private Long venueId;
 }
