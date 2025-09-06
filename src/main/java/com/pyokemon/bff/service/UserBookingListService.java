@@ -191,7 +191,7 @@ public class UserBookingListService {
                 .bodyValue(Map.of("ids", esIds))
                 .retrieve()
                 .bodyToFlux(EventScheduleDto.class)
-                .collectMap(EventScheduleDto::getEventScheduleId, it -> it);
+                .collectMap(EventScheduleDto::getId, it -> it);
     }
 
     private Mono<Map<Long, TenantDto>> batchTenantsFromBookings(List<BookingDto> bookings) {
@@ -215,7 +215,7 @@ public class UserBookingListService {
                 .bodyValue(Map.of("ids", venueIds))
                 .retrieve()
                 .bodyToFlux(VenueDto.class)
-                .collectMap(VenueDto::getVenueId, it -> it);
+                .collectMap(VenueDto::getId, it -> it);
     }
 
     private Mono<Map<Long, EventDto>> batchEventsFromSchedules(Map<Long, EventScheduleDto> esMap) {
@@ -227,7 +227,7 @@ public class UserBookingListService {
                 .bodyValue(Map.of("ids", eventIds))
                 .retrieve()
                 .bodyToFlux(EventDto.class)
-                .collectMap(EventDto::getEventId, it -> it);
+                .collectMap(EventDto::getId, it -> it);
     }
 
     // ===================== Common helpers =====================
