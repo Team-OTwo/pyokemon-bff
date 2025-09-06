@@ -1,5 +1,6 @@
 package com.pyokemon.bff.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -16,12 +17,16 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Component
 @Order(-2)
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+        // Log the exception
+        log.error("Exception handled in GlobalExceptionHandler: ", ex);
+
         DataBufferFactory bufferFactory = exchange.getResponse().bufferFactory();
         
         // 기본 상태 코드 및 메시지 설정
