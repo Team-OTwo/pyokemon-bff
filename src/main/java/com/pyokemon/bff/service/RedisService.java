@@ -2,15 +2,12 @@ package com.pyokemon.bff.service;
 
 import com.pyokemon.bff.dto.BookingStatus;
 import com.pyokemon.bff.dto.external.BookingDto;
-import com.pyokemon.bff.dto.external.EventScheduleDto;
 import com.pyokemon.bff.dto.external.SeatClassDto;
 import com.pyokemon.bff.dto.external.SeatDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,6 +15,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RedisService {
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final ReactiveRedisTemplate<String, String> redisTemplate;
 
     @Qualifier("eventServiceWebClient")
     private final WebClient eventServiceWebClient;
@@ -62,44 +60,53 @@ public class RedisService {
 
                     Map<Long, List<SeatDto>> seatsByClassId = seats.stream()
                             .collect(Collectors.groupingBy(SeatDto::getSeatClassId));
-                    List<Long> seatClassIds = seatsByClassId.keySet().stream().toList();
+                    List<Long> seatClassIds = new ArrayList<>(seatsByClassId.keySet());
 
                     return fetchSeatClasses(seatClassIds)
                             .flatMap(seatClassMap -> {
                                 String venueScheduleKey = String.format(VENUE_SCHEDULE_KEY_PATTERN, venueId, scheduleId);
-                                redisTemplate.opsForValue().set(venueScheduleKey, "active", Duration.ofDays(30));
+                                Mono<Boolean> setVenueScheduleMono = redisTemplate.opsForValue().set(venueScheduleKey, "active", Duration.ofDays(30));
 
-                                for (Map.Entry<Long, List<SeatDto>> entry : seatsByClassId.entrySet()) {
-                                    SeatClassDto seatClass = seatClassMap.get(entry.getKey());
-                                    if (seatClass == null) continue;
+                                Flux<Void> processSeatClassesFlux = Flux.fromIterable(seatsByClassId.entrySet())
+                                        .flatMap(entry -> {
+                                            SeatClassDto seatClass = seatClassMap.get(entry.getKey());
+                                            if (seatClass == null) {
+                                                return Mono.empty();
+                                            }
 
-                                    String className = seatClass.getClassName();
-                                    String classKey = String.format(SEAT_CLASS_STATUS_KEY_PATTERN, scheduleId, className);
-                                    Map<String, String> initMap = entry.getValue().stream()
-                                            .collect(Collectors.toMap(
-                                                    seat -> String.valueOf(seat.getSeatId()),
-                                                    seat -> {
-                                                        BookingDto booking = bookingsMap.get(seat.getSeatId());
-                                                        if (booking != null) {
-                                                            if (booking.getStatus() == BookingStatus.BOOKED) {
-                                                                return String.valueOf(booking.getBookingId());
-                                                            } else if (booking.getStatus() == BookingStatus.PENDING) {
-                                                                String holdKey = String.format(SEAT_HOLD_KEY_PATTERN, scheduleId, seat.getSeatId());
-                                                                String accountId = String.valueOf(booking.getAccountId());
-                                                                redisTemplate.opsForValue().set(holdKey, accountId, Duration.ofSeconds(SEAT_HOLD_DURATION_SECONDS));
-                                                                log.debug("BFF: Redis 좌석 '임시 점유' 상태로 초기화: scheduleId={}, seatId={}, accountId={}", scheduleId, seat.getSeatId(), accountId);
-                                                                return ""; 
+                                            String className = seatClass.getClassName();
+                                            String classKey = String.format(SEAT_CLASS_STATUS_KEY_PATTERN, scheduleId, className);
+
+                                            Map<String, String> initMap = entry.getValue().stream()
+                                                    .collect(Collectors.toMap(
+                                                            seat -> String.valueOf(seat.getSeatId()),
+                                                            seat -> {
+                                                                BookingDto booking = bookingsMap.get(seat.getSeatId());
+                                                                if (booking != null && booking.getStatus() == BookingStatus.BOOKED) {
+                                                                    return String.valueOf(booking.getId());
+                                                                }
+                                                                return "";
                                                             }
-                                                        }
-                                                        return ""; 
-                                                    }
-                                            ));
-                                    redisTemplate.opsForHash().putAll(classKey, initMap);
-                                }
-                                log.info("BFF: 전체 좌석 상태 초기화 및 예약 동기화 완료: scheduleId={}, venueId={}", scheduleId, venueId);
-                                return Mono.empty();
+                                                    ));
+
+                                            Mono<Boolean> hashSetMono = redisTemplate.opsForHash().putAll(classKey, initMap);
+
+                                            Flux<Boolean> pendingHoldsFlux = Flux.fromIterable(entry.getValue())
+                                                    .map(seat -> bookingsMap.get(seat.getSeatId()))
+                                                    .filter(booking -> booking != null && booking.getStatus() == BookingStatus.PENDING)
+                                                    .flatMap(booking -> {
+                                                        String holdKey = String.format(SEAT_HOLD_KEY_PATTERN, scheduleId, booking.getSeatId());
+                                                        String accountId = String.valueOf(booking.getAccountId());
+                                                        return redisTemplate.opsForValue().set(holdKey, accountId, Duration.ofSeconds(SEAT_HOLD_DURATION_SECONDS));
+                                                    });
+
+                                            return hashSetMono.thenMany(pendingHoldsFlux).then();
+                                        });
+
+                                return setVenueScheduleMono.thenMany(processSeatClassesFlux).then();
                             });
                 })
+                .doOnSuccess(v -> log.info("BFF: 전체 좌석 상태 초기화 및 예약 동기화 완료: scheduleId={}, venueId={}", scheduleId, venueId))
                 .then();
     }
 

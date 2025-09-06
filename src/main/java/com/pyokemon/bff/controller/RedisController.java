@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/redis")
+@RequestMapping("/api/redis")
 @RequiredArgsConstructor
 public class RedisController {
 
