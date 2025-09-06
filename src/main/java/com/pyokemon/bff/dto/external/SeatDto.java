@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SeatDto {
-    private Long seatId;
+    private Long id;
     private Long venueId;
     private Long seatClassId;
     private Integer floor;
