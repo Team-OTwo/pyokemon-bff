@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookingDto {
-    private Long bookingId;
+    private Long id;
     private Long accountId;
     private Long eventScheduleId;
     private Long tenantId;

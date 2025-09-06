@@ -96,7 +96,7 @@ public class MyPageBookingService {
                                     VenueDto venue = schedule != null ? venues.get(schedule.getVenueId()) : null;
 
                                     return MyPageBookingResponse.builder()
-                                            .bookingId(booking.getBookingId())
+                                            .bookingId(booking.getId())
                                             .eventTitle(event != null ? event.getTitle() : null)
                                             .eventDate(schedule != null ?
                                                     schedule.getEventDate().format(DATE_FORMATTER) : null)

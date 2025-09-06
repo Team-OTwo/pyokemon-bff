@@ -90,7 +90,7 @@ public class BookingService {
                         .build();
 
                 return BookingItem.builder()
-                        .bookingId(b.getBookingId())
+                        .bookingId(b.getId())
                         .userName(account != null ? account.getName() : null)
                         .seat(seatInfo)
                         .totalPrice(payment != null ? payment.getAmount() : null)

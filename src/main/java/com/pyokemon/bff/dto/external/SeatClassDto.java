@@ -11,5 +11,4 @@ public class SeatClassDto {
     private Long seatClassId;
     private String className;
     private Integer priority;
-    private Long venueId;
 }

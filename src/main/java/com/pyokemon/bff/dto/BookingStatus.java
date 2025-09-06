@@ -9,7 +9,8 @@ public enum BookingStatus {
     PENDING("PENDING", "예매 대기"),
     BOOKED("BOOKED", "예매 완료"),
     CANCELED("CANCELED", "예매 취소"),
-    FAILED("FAILED", "예매 실패");
+    FAILED("FAILED", "예매 실패"),
+    EXPIRED("EXPIRED", "기간 만료");
 
     private final String value;
     private final String displayValue;
@@ -37,7 +38,7 @@ public enum BookingStatus {
                 return status;
             }
         }
-        log.warn("Unknown Booking status: {}, defaulting to PENDDING", value);
+        log.warn("Unknown Booking status: {}, defaulting to PENDING", value);
         return PENDING;
     }
 }

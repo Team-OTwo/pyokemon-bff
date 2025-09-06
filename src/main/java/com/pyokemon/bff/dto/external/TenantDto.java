@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TenantDto {
-    private Long tenantId;
+    private Long id;
     private String name;
 }
