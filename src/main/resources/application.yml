@@ -11,17 +11,6 @@ spring:
       on-profile: default
     import:
       - optional:file:./config/application.yml
-  # Redis 설정
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      timeout: 2000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
 
 logging:
   config: classpath:log4j2.yml
