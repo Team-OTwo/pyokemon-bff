@@ -1,6 +1,6 @@
 server:
   port: 8086
-  
+
 management:
   endpoints:
     web:
@@ -22,7 +22,7 @@ spring:
   application:
     name: pyokemon-bff
   webflux:
-    base-path: /api
+    base-path: /bff
 
 external:
   services:
